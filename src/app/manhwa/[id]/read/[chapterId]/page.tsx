@@ -268,11 +268,11 @@ export default function ChapterReaderPage({ params }: PageProps) {
 
       {/* Top Navigation */}
       <div
-        className={`fixed top-1 left-0 right-0 z-40 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
           showControls ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
         }`}
       >
-        <div className="bg-black/60 backdrop-blur-xl border-b border-white/5">
+        <div className="bg-black/80 backdrop-blur-xl border-b border-white/5 mt-1">
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
             <button
               onClick={goBack}

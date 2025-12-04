@@ -36,6 +36,8 @@ export interface ManhwaInfo {
   views?: number;
   authors?: string[];
   chapters: Chapter[];
+  rating?: string;
+  releaseDate?: string;
 }
 
 export interface ChapterPage {

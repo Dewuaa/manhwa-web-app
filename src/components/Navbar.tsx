@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Sparkles, Compass } from 'lucide-react';
+import { Search, Sparkles, Compass, Heart, History, Tag } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import SearchBar from './SearchBar';
 
 interface NavbarProps {
   onSearch?: (query: string) => void;
@@ -22,10 +23,9 @@ export default function Navbar({ onSearch }: NavbarProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/search?query=${encodeURIComponent(searchQuery)}`);
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      router.push(`/search?query=${encodeURIComponent(query)}`);
     }
   };
 
@@ -33,45 +33,60 @@ export default function Navbar({ onSearch }: NavbarProps) {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-[#0a0a0a]/95 backdrop-blur-xl shadow-lg border-b border-white/10'
-          : 'bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm'
+          ? 'bg-background/80 backdrop-blur-xl border-b border-white/5 shadow-lg'
+          : 'bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm border-b border-white/5'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/20 group-hover:shadow-red-500/40 transition-all duration-300 group-hover:scale-105">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-black bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent tracking-tight">
-              manhwa<span className="text-red-500">.</span>
-            </span>
-          </Link>
-
-          {/* Search */}
-          <form onSubmit={handleSubmit} className="relative max-w-md w-full mx-8 hidden md:block">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search thousands of manhwa..."
-              className="w-full bg-white/5 text-sm rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:bg-white/10 transition-all placeholder:text-gray-500 text-white border border-white/10 hover:border-white/20"
-            />
-          </form>
-
-          {/* Right side */}
-          <div className="flex items-center space-x-4">
-            <Link 
-              href="/search"
-              className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition-colors"
-            >
-              <Compass className="w-5 h-5" />
-              <span className="font-medium hidden sm:inline">Discover</span>
-            </Link>
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        {/* Logo */}
+        <Link href="/" className="flex items-center space-x-3 group">
+          <div className="w-8 h-8 bg-gradient-to-br from-primary to-pink-600 rounded-lg flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-all duration-300">
+            <Sparkles className="w-4 h-4 text-white" />
           </div>
+          <span className="text-xl font-black text-white tracking-tight">
+            manhwa<span className="text-primary">.</span>
+          </span>
+        </Link>
+
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center space-x-1 mx-6">
+          <Link 
+            href="/search"
+            className="flex items-center px-4 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all"
+          >
+            <Compass className="w-4 h-4 mr-2" />
+            Discover
+          </Link>
+          <Link 
+            href="/genres"
+            className="flex items-center px-4 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all"
+          >
+            <Tag className="w-4 h-4 mr-2" />
+            Genres
+          </Link>
+          <Link 
+            href="/bookmarks"
+            className="flex items-center px-4 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all"
+          >
+            <Heart className="w-4 h-4 mr-2" />
+            Bookmarks
+          </Link>
+          <Link 
+            href="/history"
+            className="flex items-center px-4 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all"
+          >
+            <History className="w-4 h-4 mr-2" />
+            History
+          </Link>
         </div>
+
+        {/* Search Bar - Compact on Desktop */}
+        <div className="flex-1 max-w-md hidden md:block">
+          <SearchBar initialQuery={searchQuery} onSearch={handleSearch} />
+        </div>
+
+        {/* Mobile Spacer */}
+        <div className="md:hidden w-8" />
       </div>
     </nav>
   );

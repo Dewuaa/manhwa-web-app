@@ -52,11 +52,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-20">
+    <div className="min-h-screen bg-background pb-24 md:pb-12 pt-20">
       {/* Header */}
-      <div className="pt-24 pb-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold text-white mb-8">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-600">
+      <div className="px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto">
+        <h1 className="text-3xl md:text-4xl font-black text-white mb-8 tracking-tight">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-pink-600">
             Discover
           </span>{' '}
           Manhwa
@@ -82,7 +82,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           </div>
         ) : !searchResults ? (
           <div className="text-center py-20">
-            <div className="w-16 h-16 border-4 border-white/10 border-t-red-500 rounded-full animate-spin mx-auto mb-6"></div>
+            <div className="w-16 h-16 border-4 border-white/10 border-t-primary rounded-full animate-spin mx-auto mb-6"></div>
             <p className="text-gray-400">Searching the archives...</p>
           </div>
         ) : searchResults.results.length === 0 ? (
@@ -93,7 +93,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 mb-12">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-12">
               {searchResults.results.map((manhwa) => (
                 <ManhwaCard 
                   key={manhwa.id} 
