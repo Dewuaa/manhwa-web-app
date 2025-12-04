@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: 0 0% 2%;
+  --color-foreground: 0 0% 98%;
+  --color-card: 0 0% 4%;
+  --color-card-foreground: 0 0% 98%;
+  --color-popover: 0 0% 4%;
+  --color-popover-foreground: 0 0% 98%;
+  --color-primary: 250 95% 65%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-secondary: 0 0% 8%;
+  --color-secondary-foreground: 0 0% 98%;
+  --color-muted: 0 0% 12%;
+  --color-muted-foreground: 0 0% 55%;
+  --color-accent: 250 95% 65%;
+  --color-accent-foreground: 0 0% 100%;
+  --color-destructive: 0 72% 51%;
+  --color-destructive-foreground: 0 0% 100%;
+  --color-border: 0 0% 12%;
+  --color-input: 0 0% 12%;
+  --color-ring: 250 95% 65%;
+  
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-fade-in: fadeIn 0.5s ease-out;
+}
+
+:root {
+  --background: 0 0% 2%;
+  --foreground: 0 0% 98%;
+  --radius: 0.75rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  ::selection {
+    @apply bg-primary/30 text-white;
+  }
+}
+
+/* Minimal Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(0 0% 20%);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(0 0% 30%);
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Utility Classes */
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Focus States */
+*:focus-visible {
+  @apply outline-none ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+}
+
+/* Better Touch */
+@media (hover: none) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
