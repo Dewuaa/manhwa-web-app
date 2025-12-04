@@ -105,3 +105,36 @@
     -webkit-tap-highlight-color: transparent;
   }
 }
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  /* Larger touch targets */
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better spacing */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Prevent text size adjustment */
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  /* Smooth scrolling on mobile */
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* PWA Safe Area */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}

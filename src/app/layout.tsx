@@ -23,6 +23,12 @@ export const metadata: Metadata = {
     template: "%s | Manhwa Reader"
   },
   description: "Browse and read your favorite Korean manhwa from AsuraScans and WeebCentral",
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Manhwa Reader',
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -51,6 +57,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="dark">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+        <meta name="theme-color" content="#ef4444" />
+        <link rel="icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground selection:bg-primary/30 selection:text-primary-foreground pb-16 md:pb-0`}
         suppressHydrationWarning

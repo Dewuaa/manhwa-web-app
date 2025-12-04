@@ -39,7 +39,7 @@ export default function ManhwaCard({ manhwa, showNewBadge = false }: ManhwaCardP
     >
       {/* Image Container */}
       <Link href={`/manhwa/${encodeURIComponent(manhwa.id)}`}>
-        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-white/5 ring-1 ring-white/10 shadow-xl hover:shadow-2xl hover:shadow-red-500/20 transition-all duration-300 hover:-translate-y-1 hover:ring-red-500/50">
+        <div className="relative aspect-[2/3] md:aspect-[3/4] rounded-xl md:rounded-2xl overflow-hidden bg-white/5 ring-1 ring-white/10 shadow-xl hover:shadow-2xl hover:shadow-red-500/20 transition-all duration-300 hover:-translate-y-1 hover:ring-red-500/50 active:scale-95">
           {!imageError && manhwa.image ? (
             <Image
               src={manhwa.image}
@@ -90,7 +90,7 @@ export default function ManhwaCard({ manhwa, showNewBadge = false }: ManhwaCardP
 
       {/* Title */}
       <Link href={`/manhwa/${encodeURIComponent(manhwa.id)}`}>
-        <h3 className="font-bold text-sm text-white line-clamp-2 leading-tight mt-3 group-hover:text-red-400 transition-colors">
+        <h3 className="font-bold text-xs md:text-sm text-white line-clamp-2 leading-tight mt-2 md:mt-3 group-hover:text-red-400 transition-colors min-h-[44px] flex items-center">
           {manhwa.title}
         </h3>
       </Link>
