@@ -6,7 +6,20 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { manhwaAPI } from '@/lib/api';
 import { ChapterPage, Provider, ManhwaInfo } from '@/lib/types';
-import { ArrowLeft, ChevronLeft, ChevronRight, List, X, Heart, Settings, Check, Maximize2, Minimize2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  MessageSquare,
+  Settings,
+  Bookmark,
+  Check,
+  Maximize2,
+  Minimize2,
+  List,
+  X,
+} from 'lucide-react';
 import { addToHistory, isBookmarked, toggleBookmark } from '@/lib/storage';
 import { useReadingHistory } from '@/hooks/useReadingHistory';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,41 +31,35 @@ interface PageProps {
 
 export default function ChapterReaderPage({ params }: PageProps) {
   const router = useRouter();
-  const provider = Provider.MANHUAUS;
+  const provider = Provider.MANHUAPLUS;
+  
+  // Data State
   const [pages, setPages] = useState<ChapterPage[]>([]);
   const [manhwaInfo, setManhwaInfo] = useState<ManhwaInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // ID State
   const [manhwaId, setManhwaId] = useState<string>('');
   const [chapterId, setChapterId] = useState<string>('');
+  
+  // UI State
   const [showControls, setShowControls] = useState(true);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [currentChapterIndex, setCurrentChapterIndex] = useState(-1);
   const [bookmarked, setBookmarked] = useState(false);
-  const [imageFit, setImageFit] = useState<'contained' | 'full'>('contained');
   const [showSettings, setShowSettings] = useState(false);
+  const [imageFit, setImageFit] = useState<'contained' | 'full'>('contained');
   const [showChapterDrawer, setShowChapterDrawer] = useState(false);
   const [chapterSearch, setChapterSearch] = useState('');
+
   const { success } = useToast();
-  
-  // Reading history tracking
-  const { markChapterRead } = useReadingHistory();
+  const { markChapterRead, getChapterProgress } = useReadingHistory();
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const hasRestoredScroll = useRef(false);
 
-  useEffect(() => {
-    // Load settings
-    const savedFit = localStorage.getItem('reader_image_fit');
-    if (savedFit === 'full' || savedFit === 'contained') {
-      setImageFit(savedFit);
-    }
-  }, []);
-
-  const toggleImageFit = (fit: 'contained' | 'full') => {
-    setImageFit(fit);
-    localStorage.setItem('reader_image_fit', fit);
-    setShowSettings(false);
-  };
-
+  // Load Params
   useEffect(() => {
     params.then((p) => {
       setManhwaId(p.id);
@@ -60,16 +67,58 @@ export default function ChapterReaderPage({ params }: PageProps) {
     });
   }, [params]);
 
+  // Initial Load
   useEffect(() => {
     if (manhwaId && chapterId) {
       loadChapter();
       loadManhwaInfo();
       setBookmarked(isBookmarked(decodeURIComponent(manhwaId)));
-      window.scrollTo(0, 0);
+      
+      // Reset scroll restoration flag when chapter changes
+      hasRestoredScroll.current = false;
+      
+      // Load saved settings
+      const savedFit = localStorage.getItem('reader_image_fit');
+      if (savedFit === 'full' || savedFit === 'contained') {
+        setImageFit(savedFit);
+      }
     }
   }, [chapterId, manhwaId]);
+  
+  // Restore scroll position after pages load
+  useEffect(() => {
+    if (!manhwaId || !chapterId || !pages.length || hasRestoredScroll.current) return;
+    
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    
+    // Get saved progress
+    const savedProgress = getChapterProgress(decodeURIComponent(manhwaId), decodeURIComponent(chapterId));
+    
+    if (savedProgress > 0 && savedProgress < 100) {
+      // Wait a bit for images to start loading
+      setTimeout(() => {
+        const { scrollHeight, clientHeight } = container;
+        const targetScroll = (savedProgress / 100) * (scrollHeight - clientHeight);
+        
+        console.log('Restoring scroll position:', {
+          savedProgress,
+          scrollHeight,
+          clientHeight,
+          targetScroll
+        });
+        
+        container.scrollTop = targetScroll;
+        hasRestoredScroll.current = true;
+      }, 500); // Wait 500ms for images to start rendering
+    } else {
+      // No saved progress or finished chapter, start from top
+      container.scrollTop = 0;
+      hasRestoredScroll.current = true;
+    }
+  }, [pages, manhwaId, chapterId, getChapterProgress]);
 
-  // Auto-hide controls logic
+  // Controls Auto-Hide
   const resetControlsTimeout = useCallback(() => {
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
@@ -88,57 +137,100 @@ export default function ChapterReaderPage({ params }: PageProps) {
     };
   }, [resetControlsTimeout]);
 
-  const toggleControls = () => {
-    setShowControls(prev => !prev);
-  };
-
-  // Scroll progress tracking
+  // Scroll Handler for Progress
   useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
     const handleScroll = () => {
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const scrollTop = window.scrollY;
-      const progress = (scrollTop / (documentHeight - windowHeight)) * 100;
-      setScrollProgress(Math.min(100, Math.max(0, progress)));
-      resetControlsTimeout();
+        const { scrollTop, scrollHeight, clientHeight } = container;
+        
+        // Avoid division by zero
+        if (scrollHeight === clientHeight) return;
+        
+        // Only calculate if container is properly loaded (has content)
+        if (scrollHeight <= clientHeight) return;
+
+        const progress = (scrollTop / (scrollHeight - clientHeight)) * 100;
+        const clampedProgress = Math.min(100, Math.max(0, progress));
+        
+        // Debug logging
+        console.log('Scroll calculation:', {
+          scrollTop,
+          scrollHeight,
+          clientHeight,
+          calculatedProgress: clampedProgress
+        });
+        
+        setScrollProgress(clampedProgress);
+        
+        resetControlsTimeout(); 
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
   }, [resetControlsTimeout]);
 
-  // Keyboard shortcuts
+  // Save Progress on Scroll (Debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+        // Only save if we have valid data
+        if (!manhwaInfo || !chapterId) return;
+        
+        const decodedChapterId = decodeURIComponent(chapterId);
+        const currentChapter = manhwaInfo.chapters.find((ch) => ch.id === decodedChapterId);
+        
+        if (currentChapter && scrollProgress >= 0) {
+            const roundedProgress = Math.round(scrollProgress);
+            console.log('Saving progress:', roundedProgress, 'for chapter:', decodedChapterId);
+            
+            markChapterRead(
+                decodeURIComponent(manhwaId),
+                manhwaInfo.title,
+                manhwaInfo.image,
+                decodedChapterId,
+                currentChapter.title || `Chapter ${decodedChapterId}`,
+                manhwaInfo.chapters.length,
+                roundedProgress
+            );
+        }
+    }, 1000); // Save every 1 second of inactivity or scroll pause
+
+    return () => clearTimeout(timer);
+  }, [scrollProgress, manhwaId, chapterId, manhwaInfo, markChapterRead]);
+
+  const toggleControls = () => setShowControls(prev => !prev);
+  const toggleImageFit = (fit: 'contained' | 'full') => {
+    setImageFit(fit);
+    localStorage.setItem('reader_image_fit', fit);
+    setShowSettings(false);
+  };
+
+  // Keyboard Navigation
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        router.push(`/manhwa/${encodeURIComponent(manhwaId)}`);
-      } else if (e.key === 'ArrowLeft') {
-        navigateToPrevChapter();
-      } else if (e.key === 'ArrowRight') {
-        navigateToNextChapter();
-      } else if (e.key === ' ') {
-        e.preventDefault();
-        window.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' });
-      } else if (e.key === 'm') {
-        toggleControls();
-      }
+      if (e.key === 'Escape') router.push(`/manhwa/${encodeURIComponent(manhwaId)}`);
+      else if (e.key === 'ArrowLeft') navigateToPrevChapter();
+      else if (e.key === 'ArrowRight') navigateToNextChapter();
+      else if (e.key === 'm') toggleControls();
     };
-
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [manhwaId, currentChapterIndex, manhwaInfo]);
 
+  // Logic: Load Manhwa Info
   const loadManhwaInfo = async () => {
     try {
       manhwaAPI.setProvider(provider);
       const info = await manhwaAPI.getManhwaInfo(decodeURIComponent(manhwaId));
       setManhwaInfo(info);
-      
+
       const decodedChapterId = decodeURIComponent(chapterId);
-      const index = info.chapters.findIndex(ch => ch.id === decodedChapterId);
+      const index = info.chapters.findIndex((ch) => ch.id === decodedChapterId);
       setCurrentChapterIndex(index);
 
-      const currentChapter = info.chapters.find(ch => ch.id === decodedChapterId);
+      // Add to history
+      const currentChapter = info.chapters.find((ch) => ch.id === decodedChapterId);
       if (currentChapter) {
         addToHistory({
           manhwaId: decodeURIComponent(manhwaId),
@@ -154,6 +246,7 @@ export default function ChapterReaderPage({ params }: PageProps) {
     }
   };
 
+  // Logic: Load Chapter Pages
   const loadChapter = async () => {
     try {
       setLoading(true);
@@ -163,283 +256,224 @@ export default function ChapterReaderPage({ params }: PageProps) {
       const chapterPages = await manhwaAPI.getChapterPages(decodedChapterId);
       setPages(chapterPages);
     } catch (err) {
-      setError('Failed to load chapter');
-      console.error(err);
+        setError('Failed to load chapter');
+        console.error(err);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (manhwaInfo && pages.length > 0 && chapterId && manhwaId) {
-      const decodedChapterId = decodeURIComponent(chapterId);
-      const currentChapter = manhwaInfo.chapters.find(
-        (ch) => String(ch.id) === decodedChapterId
-      );
-      
-      if (currentChapter) {
-        markChapterRead(
-          decodeURIComponent(manhwaId),
-          manhwaInfo.title,
-          manhwaInfo.image,
-          decodedChapterId,
-          currentChapter.title || `Chapter ${decodedChapterId}`,
-          manhwaInfo.chapters.length
-        );
-      }
-    }
-  }, [manhwaInfo, pages, chapterId, manhwaId, markChapterRead]);
-
+  // Navigation
   const navigateToPrevChapter = () => {
     if (manhwaInfo && currentChapterIndex < manhwaInfo.chapters.length - 1) {
-      const prevChapter = manhwaInfo.chapters[currentChapterIndex + 1];
-      router.push(`/manhwa/${encodeURIComponent(manhwaId)}/read/${encodeURIComponent(String(prevChapter.id))}`);
+      const prev = manhwaInfo.chapters[currentChapterIndex + 1];
+      router.push(`/manhwa/${encodeURIComponent(manhwaId)}/read/${encodeURIComponent(String(prev.id))}`);
     }
   };
 
   const navigateToNextChapter = () => {
     if (manhwaInfo && currentChapterIndex > 0) {
-      const nextChapter = manhwaInfo.chapters[currentChapterIndex - 1];
-      router.push(`/manhwa/${encodeURIComponent(manhwaId)}/read/${encodeURIComponent(String(nextChapter.id))}`);
+      const next = manhwaInfo.chapters[currentChapterIndex - 1];
+      router.push(`/manhwa/${encodeURIComponent(manhwaId)}/read/${encodeURIComponent(String(next.id))}`);
     }
   };
 
   const handleBookmarkToggle = () => {
     if (!manhwaInfo) return;
-    
     const newBookmarked = toggleBookmark({
       id: decodeURIComponent(manhwaId),
       title: manhwaInfo.title,
       image: manhwaInfo.image,
       addedAt: Date.now(),
     });
-    
     setBookmarked(newBookmarked);
-    success(newBookmarked ? 'Added to bookmarks ❤️' : 'Removed from bookmarks');
+    success(newBookmarked ? 'Added to Library' : 'Removed from Library');
   };
+
+  const hasPrevChapter = manhwaInfo && currentChapterIndex < manhwaInfo.chapters.length - 1;
+  const hasNextChapter = manhwaInfo && currentChapterIndex > 0;
+  const currentChapter = manhwaInfo?.chapters[currentChapterIndex];
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-        <div className="w-12 h-12 border-3 border-white/10 border-t-primary rounded-full animate-spin"></div>
-        <p className="text-gray-400 mt-6 text-sm font-medium animate-pulse">Loading chapter...</p>
-      </div>
+        <div className="min-h-screen bg-black flex flex-col items-center justify-center">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-gray-400 mt-6 text-sm font-bold animate-pulse">Loading Chapter...</p>
+        </div>
     );
   }
 
   if (error || pages.length === 0) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
-          <div className="text-6xl mb-6">😔</div>
-          <p className="text-red-400 text-xl mb-6 font-semibold">{error || 'Failed to load chapter'}</p>
-          <Link
-            href={`/manhwa/${encodeURIComponent(manhwaId)}`}
-            className="inline-flex items-center px-6 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-all"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Back to Details
-          </Link>
-        </div>
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4 text-center">
+         <p className="text-red-500 text-xl font-bold mb-4">{error || 'Failed to load chapter'}</p>
+         <button onClick={() => router.back()} className="px-6 py-3 bg-white/10 rounded-xl text-white font-bold hover:bg-white/20 transition-all">
+             Go Back
+         </button>
       </div>
     );
   }
 
-  const hasPrevChapter = manhwaInfo && currentChapterIndex < manhwaInfo.chapters.length - 1;
-  const hasNextChapter = manhwaInfo && currentChapterIndex > 0;
-
   return (
-    <div className="min-h-screen bg-black relative selection:bg-primary/30">
-      {/* Reading Progress Bar */}
+    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+      
+      {/* Top Bar */}
       <motion.div 
-        className="fixed top-0 left-0 right-0 z-[60] h-1 bg-white/5"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: showControls ? 1 : 0.5 }}
+        initial={false}
+        animate={{ y: showControls ? 0 : '-100%' }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        className="absolute top-0 left-0 right-0 bg-gray-950/90 backdrop-blur-md p-4 flex justify-between items-center z-50 border-b border-white/5"
       >
-        <div
-          className="h-full bg-gradient-to-r from-primary to-pink-500 transition-all duration-150 ease-out"
-          style={{ width: `${scrollProgress}%` }}
-        />
+        <div className="flex items-center gap-4 text-white">
+          <button onClick={() => router.push(`/manhwa/${encodeURIComponent(manhwaId)}`)} className="hover:text-blue-400 transition-colors">
+              <ArrowLeft size={24} />
+          </button>
+          <div className="flex flex-col">
+            <span className="text-sm font-bold truncate w-48 md:w-auto">{manhwaInfo?.title}</span>
+            <span className="text-xs text-gray-400">{currentChapter?.title || `Chapter ${chapterId}`}</span>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4">
+             <button 
+                onClick={handleBookmarkToggle}
+                className={`transition-colors ${bookmarked ? 'text-blue-500' : 'text-white hover:text-blue-400'}`}
+             >
+                 <Bookmark size={24} fill={bookmarked ? "currentColor" : "none"} />
+             </button>
+             <button 
+                onClick={() => setShowSettings(!showSettings)}
+                className={`transition-colors ${showSettings ? 'text-blue-400' : 'text-white hover:text-blue-400'}`}
+             >
+                 <Settings size={20} />
+             </button>
+        </div>
       </motion.div>
 
-      {/* Top Bar */}
-      <AnimatePresence>
-        {showControls && (
-          <motion.div
-            initial={{ y: -100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -100, opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 left-0 right-0 z-50"
-          >
-            <div className="bg-gradient-to-b from-black/90 to-transparent backdrop-blur-xl border-b border-white/5 pb-2 pt-2">
-              <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Link
-                    href={`/manhwa/${encodeURIComponent(manhwaId)}`}
-                    className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors border border-white/5"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </Link>
-                  <div className="hidden md:block">
-                    <h1 className="text-white font-bold text-sm line-clamp-1">{manhwaInfo?.title}</h1>
-                    <p className="text-gray-400 text-xs">
-                      Chapter {manhwaInfo?.chapters.length && currentChapterIndex >= 0 
-                        ? manhwaInfo.chapters.length - currentChapterIndex 
-                        : '...'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={handleBookmarkToggle}
-                    className={`p-2 rounded-full transition-all border border-white/5 ${
-                      bookmarked 
-                        ? 'bg-primary text-white shadow-lg shadow-primary/20' 
-                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    <Heart className={`w-5 h-5 ${bookmarked ? 'fill-current' : ''}`} />
-                  </button>
-                  <button
-                    onClick={() => setShowSettings(!showSettings)}
-                    className={`p-2 rounded-full transition-all border border-white/5 ${
-                      showSettings ? 'bg-white/20 text-white' : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    <Settings className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Settings Menu */}
-      <AnimatePresence>
+       {/* Settings Menu Popup */}
+       <AnimatePresence>
         {showSettings && showControls && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="fixed top-20 right-4 z-50 w-72 bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+            className="fixed top-20 right-4 z-[60] w-64 bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-4"
           >
-            <div className="p-4 space-y-4">
-              <div>
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Display Mode</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => toggleImageFit('contained')}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
-                      imageFit === 'contained'
-                        ? 'bg-primary/10 border-primary/50 text-primary'
-                        : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
-                    }`}
-                  >
-                    <Minimize2 className="w-5 h-5 mb-2" />
-                    <span className="text-xs font-medium">Fit Width</span>
-                  </button>
-                  <button
-                    onClick={() => toggleImageFit('full')}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
-                      imageFit === 'full'
-                        ? 'bg-primary/10 border-primary/50 text-primary'
-                        : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
-                    }`}
-                  >
-                    <Maximize2 className="w-5 h-5 mb-2" />
-                    <span className="text-xs font-medium">Full Size</span>
-                  </button>
-                </div>
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Display Mode</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => toggleImageFit('contained')}
+                  className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${imageFit === 'contained' ? 'bg-blue-600/20 border-blue-500/50 text-blue-400' : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'}`}
+                >
+                  <Minimize2 className="w-5 h-5 mb-2" />
+                  <span className="text-xs font-bold">Fit Width</span>
+                </button>
+                <button
+                  onClick={() => toggleImageFit('full')}
+                  className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${imageFit === 'full' ? 'bg-blue-600/20 border-blue-500/50 text-blue-400' : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'}`}
+                >
+                  <Maximize2 className="w-5 h-5 mb-2" />
+                  <span className="text-xs font-bold">Full Size</span>
+                </button>
               </div>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main Content Area - Click to toggle controls */}
+      {/* Reader Area */}
       <div 
-        className="min-h-screen w-full cursor-pointer"
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto scroll-smooth hide-scrollbar relative bg-black/95 h-full"
         onClick={toggleControls}
       >
-        <div className={`w-full mx-auto transition-all duration-300 ${
-          imageFit === 'contained' ? 'max-w-3xl' : 'max-w-full'
-        }`}>
-          {pages.map((page, index) => (
-            <div key={page.page} className="relative w-full">
-              <Image
-                src={page.img}
-                alt={`Page ${page.page}`}
-                width={0}
-                height={0}
-                sizes="100vw"
-                className="w-full h-auto select-none"
-                loading={index < 3 ? 'eager' : 'lazy'}
-                quality={90}
-                priority={index < 2}
-              />
+        <div className={`mx-auto bg-black min-h-full shadow-2xl transition-all duration-300 ${imageFit === 'contained' ? 'max-w-2xl border-x border-white/5' : 'w-full'}`}>
+            {pages.map((page, index) => (
+              <div key={index} className="w-full relative">
+                <Image 
+                   src={page.img} 
+                   alt={`Page ${index + 1}`}
+                   width={0}
+                   height={0}
+                   sizes="100vw"
+                   className="w-full h-auto block select-none"
+                   loading={index < 3 ? 'eager' : 'lazy'}
+                   quality={90}
+                />
+              </div>
+            ))}
+
+            {/* Next Chapter Button at bottom */}
+            <div className="p-12 flex flex-col items-center gap-6 bg-gray-950 text-white border-t border-white/5">
+              <p className="text-gray-500 text-sm font-medium">You've reached the end of the chapter</p>
+              {hasNextChapter ? (
+                <button 
+                    onClick={(e) => { e.stopPropagation(); navigateToNextChapter(); }}
+                    className="px-12 py-4 bg-blue-600 rounded-full font-bold w-full max-w-xs hover:bg-blue-500 hover:scale-105 transition-all shadow-lg shadow-blue-900/20"
+                >
+                  Next Chapter
+                </button>
+              ) : (
+                <p className="text-blue-400 font-bold bg-blue-400/10 px-6 py-2 rounded-full">Latest Chapter Reached</p>
+              )}
             </div>
-          ))}
+            
+            {/* Padding for bottom bar */}
+            <div className="h-32"></div>
         </div>
-        
-        {/* Bottom Padding for Controls */}
-        <div className="h-32" />
       </div>
 
-      {/* Bottom Controls */}
-      <AnimatePresence>
-        {showControls && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed bottom-0 left-0 right-0 z-50"
-          >
-            <div className="bg-gradient-to-t from-black/90 to-transparent backdrop-blur-xl border-t border-white/5 pb-6 pt-4">
-              <div className="max-w-3xl mx-auto px-4 flex items-center justify-between gap-4">
-                <button
-                  onClick={(e) => { e.stopPropagation(); navigateToPrevChapter(); }}
-                  disabled={!hasPrevChapter}
-                  className={`flex-1 h-12 rounded-xl flex items-center justify-center space-x-2 font-bold transition-all ${
-                    hasPrevChapter
-                      ? 'bg-white/10 hover:bg-white/20 text-white active:scale-95'
-                      : 'bg-white/5 text-gray-600 cursor-not-allowed'
-                  }`}
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                  <span className="hidden sm:inline">Previous</span>
-                </button>
+      {/* Bottom Bar */}
+      <motion.div 
+        initial={false}
+        animate={{ y: showControls ? 0 : '100%' }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        className="absolute bottom-0 left-0 right-0 bg-gray-950/90 backdrop-blur-md px-6 py-4 z-50 border-t border-white/5"
+      >
+        {/* Progress Bar */}
+        <div className="w-full h-1 bg-gray-800 rounded-full mb-4 relative max-w-3xl mx-auto cursor-pointer group">
+          <div className="absolute -top-2 -bottom-2 w-full bg-transparent z-10" />
+          <div 
+            className="h-full bg-blue-500 rounded-full transition-all duration-150 group-hover:h-1.5 group-hover:-mt-0.5"
+            style={{ width: `${scrollProgress}%` }}
+          />
+        </div>
 
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowChapterDrawer(true); }}
-                  className="h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold flex items-center justify-center space-x-2 shadow-lg shadow-primary/25 transition-all active:scale-95"
-                >
-                  <List className="w-5 h-5" />
-                  <span className="hidden sm:inline">Chapters</span>
-                </button>
+        <div className="flex justify-between items-center text-gray-400 max-w-md mx-auto">
+           <button 
+             onClick={navigateToPrevChapter}
+             disabled={!hasPrevChapter}
+             className={`flex flex-col items-center gap-1 transition-colors p-2 rounded-lg ${!hasPrevChapter ? 'opacity-30 cursor-not-allowed' : 'hover:text-white hover:bg-white/5'}`}
+           >
+             <ChevronLeft size={20} />
+             <span className="text-[10px]">Prev</span>
+           </button>
+           
+           <button 
+                onClick={() => setShowChapterDrawer(true)}
+                className="flex flex-col items-center gap-1 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
+            >
+             <Menu size={20} />
+             <span className="text-[10px]">Chapters</span>
+           </button>
 
-                <button
-                  onClick={(e) => { e.stopPropagation(); navigateToNextChapter(); }}
-                  disabled={!hasNextChapter}
-                  className={`flex-1 h-12 rounded-xl flex items-center justify-center space-x-2 font-bold transition-all ${
-                    hasNextChapter
-                      ? 'bg-white/10 hover:bg-white/20 text-white active:scale-95'
-                      : 'bg-white/5 text-gray-600 cursor-not-allowed'
-                  }`}
-                >
-                  <span className="hidden sm:inline">Next</span>
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+           <button className="flex flex-col items-center gap-1 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg relative">
+             <MessageSquare size={20} />
+             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-gray-950" />
+             <span className="text-[10px]">Comments</span>
+           </button>
 
-      {/* Chapter Drawer */}
+           <button 
+                onClick={navigateToNextChapter}
+                disabled={!hasNextChapter}
+                className={`flex flex-col items-center gap-1 transition-colors p-2 rounded-lg ${!hasNextChapter ? 'opacity-30 cursor-not-allowed' : 'hover:text-white hover:bg-white/5'}`}
+           >
+             <ChevronRight size={20} />
+             <span className="text-[10px]">Next</span>
+           </button>
+        </div>
+      </motion.div>
+
+      {/* Chapter Drawer Overlay */}
       <AnimatePresence>
         {showChapterDrawer && (
           <>
@@ -476,13 +510,17 @@ export default function ChapterReaderPage({ params }: PageProps) {
                   placeholder="Search chapters..."
                   value={chapterSearch}
                   onChange={(e) => setChapterSearch(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-gray-600"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-gray-600"
                 />
               </div>
 
               <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
                 {manhwaInfo?.chapters
-                  .filter(ch => ch.title?.toLowerCase().includes(chapterSearch.toLowerCase()) || ch.id.includes(chapterSearch))
+                  .filter(
+                    (ch) =>
+                      ch.title?.toLowerCase().includes(chapterSearch.toLowerCase()) ||
+                      ch.id.includes(chapterSearch),
+                  )
                   .map((chapter) => (
                     <Link
                       key={chapter.id}
@@ -490,14 +528,16 @@ export default function ChapterReaderPage({ params }: PageProps) {
                       onClick={() => setShowChapterDrawer(false)}
                       className={`block px-4 py-3 rounded-xl text-sm transition-all ${
                         chapter.id === decodeURIComponent(chapterId)
-                          ? 'bg-primary/10 text-primary font-bold border border-primary/20'
+                          ? 'bg-blue-600/10 text-blue-400 font-bold border border-blue-500/20'
                           : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="truncate flex-1">{chapter.title || `Chapter ${chapter.id}`}</span>
+                        <span className="truncate flex-1">
+                          {chapter.title || `Chapter ${chapter.id}`}
+                        </span>
                         {chapter.id === decodeURIComponent(chapterId) && (
-                          <Check className="w-4 h-4 text-primary ml-2" />
+                          <Check className="w-4 h-4 text-blue-400 ml-2" />
                         )}
                       </div>
                     </Link>
@@ -507,6 +547,7 @@ export default function ChapterReaderPage({ params }: PageProps) {
           </>
         )}
       </AnimatePresence>
+
     </div>
   );
 }

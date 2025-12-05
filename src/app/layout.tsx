@@ -1,52 +1,53 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import ScrollToTop from "@/components/ScrollToTop";
-import BottomNav from "@/components/BottomNav";
-import QueryProvider from "@/providers/QueryProvider";
-import { ToastProvider } from "@/contexts/ToastContext";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+import ScrollToTop from '@/components/ScrollToTop';
+import AppLayout from '@/components/AppLayout';
+import QueryProvider from '@/providers/QueryProvider';
+import { ToastProvider } from '@/contexts/ToastContext';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL('http://localhost:3000'), // Replace with actual domain in production
   title: {
-    default: "Manhwa Reader - Browse & Read Korean Webtoons",
-    template: "%s | Manhwa Reader"
+    default: 'Inkora - Read Manga & Manhwa Online',
+    template: '%s | Inkora',
   },
-  description: "Browse and read your favorite Korean manhwa from AsuraScans and WeebCentral",
+  description:
+    'Your ultimate destination for reading manga and manhwa online. Discover thousands of titles with Inkora.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Manhwa Reader',
+    title: 'Inkora',
   },
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: '/',
-    siteName: 'Manhwa Reader',
+    siteName: 'Inkora',
     images: [
       {
         url: '/og-image.jpg', // You might want to add a default OG image to public/
         width: 1200,
         height: 630,
-        alt: 'Manhwa Reader',
+        alt: 'Inkora - Manga & Manhwa Reader',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Manhwa Reader',
-    description: 'Browse and read your favorite Korean manhwa',
+    title: 'Inkora',
+    description: 'Your ultimate destination for reading manga and manhwa online',
   },
 };
 
@@ -58,8 +59,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="dark">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
-        <meta name="theme-color" content="#ef4444" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes"
+        />
+        <meta name="theme-color" content="#9333ea" />
         <link rel="icon" href="/icon-192.png" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
@@ -69,9 +73,8 @@ export default function RootLayout({
       >
         <QueryProvider>
           <ToastProvider>
-            {children}
+            <AppLayout>{children}</AppLayout>
             <ScrollToTop />
-            <BottomNav />
           </ToastProvider>
         </QueryProvider>
       </body>

@@ -1,5 +1,5 @@
 export enum Provider {
-  MANHUAUS = 'manhuaus',
+  MANHUAPLUS = 'manhuaplus',
 }
 
 export interface Manhwa {
@@ -9,7 +9,8 @@ export interface Manhwa {
   status: string;
   latestChapter: string;
   latestChapters?: Array<{ title: string; releaseDate: string }>;
-  rating?: string;
+  rating?: number | string | null;
+  genres?: string[];
 }
 
 export interface SearchResult {
@@ -36,7 +37,7 @@ export interface ManhwaInfo {
   views?: number;
   authors?: string[];
   chapters: Chapter[];
-  rating?: string;
+  rating?: number | string | null;
   releaseDate?: string;
 }
 
@@ -44,4 +45,11 @@ export interface ChapterPage {
   page: number;
   img: string;
   headerForImage?: { Referer: string };
+}
+
+export interface MetadataEnrichment {
+  genres?: string[];
+  authors?: string[];
+  releaseDate?: string;
+  description?: string;
 }

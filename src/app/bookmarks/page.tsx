@@ -13,15 +13,15 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
-    }
-  }
+      staggerChildren: 0.1,
+    },
+  },
 };
 
 export default function BookmarksPage() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const provider = Provider.MANHUAUS;
+  const provider = Provider.MANHUAPLUS;
 
   useEffect(() => {
     setBookmarks(getBookmarks());
@@ -46,7 +46,7 @@ export default function BookmarksPage() {
               <ArrowLeft className="w-5 h-5 mr-2" />
               Back to Home
             </Link>
-            
+
             <div className="flex items-center space-x-4">
               <h1 className="text-xl font-bold text-white flex items-center">
                 <Heart className="w-5 h-5 mr-2 text-pink-500 fill-pink-500" />
@@ -76,13 +76,13 @@ export default function BookmarksPage() {
             </p>
             <Link
               href="/"
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20"
+              className="inline-flex items-center px-6 py-3 bg-linear-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20"
             >
               Browse Manhwa
             </Link>
           </div>
         ) : (
-          <motion.div 
+          <motion.div
             className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5"
             variants={containerVariants}
             initial="hidden"

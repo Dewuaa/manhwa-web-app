@@ -1,93 +1,103 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
-import { X, Play, BookOpen } from 'lucide-react';
+import { X, Play, BookOpen, Clock } from 'lucide-react';
+import ImageWithFallback from './ImageWithFallback';
 import { useReadingHistory } from '@/hooks/useReadingHistory';
 import { motion } from 'framer-motion';
+import { SectionHeader } from './zenith/SectionHeader';
+import { useRef } from 'react';
 
 export default function ContinueReading() {
   const { getRecentlyRead, removeFromHistory, getProgress } = useReadingHistory();
-  const recentlyRead = getRecentlyRead(6);
+  const recentlyRead = getRecentlyRead(10);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   if (recentlyRead.length === 0) {
     return null;
   }
 
   return (
-    <section className="mb-12">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-black text-white flex items-center uppercase tracking-wide">
-          <Play className="w-5 h-5 mr-2 text-primary fill-primary" />
-          Continue Reading
-        </h2>
-      </div>
+    <section className="mt-8 relative group">
+      <SectionHeader title="Jump Back In" icon={<Clock size={18} className="text-blue-500" />} />
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div 
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto hide-scrollbar px-4 pb-4 snap-x snap-mandatory md:gap-6"
+      >
         {recentlyRead.map((item, index) => {
           const progress = getProgress(item.manhwaId);
-          
+
           return (
             <motion.div
               key={item.manhwaId}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="group relative"
+              className="snap-center flex-none w-[280px] md:w-[320px] group/card relative"
             >
-              {/* Remove button */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  removeFromHistory(item.manhwaId);
-                }}
-                className="absolute top-2 right-2 z-10 w-7 h-7 bg-black/60 hover:bg-black/80 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 border border-white/10"
-                title="Remove from Continue Reading"
-              >
-                <X className="w-4 h-4 text-white" />
-              </button>
+              <div className="flex gap-4 bg-gray-900/60 backdrop-blur-sm border border-white/5 rounded-2xl p-3 hover:bg-gray-800/60 transition-colors cursor-pointer h-full relative overflow-hidden">
+                  {/* Remove button */}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      removeFromHistory(item.manhwaId);
+                    }}
+                    className="absolute top-2 right-2 z-20 w-6 h-6 bg-black/40 hover:bg-red-500/80 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-all"
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3 text-white" />
+                  </button>
 
-              <Link href={`/manhwa/${encodeURIComponent(item.manhwaId)}/read/${encodeURIComponent(item.lastChapterId)}`}>
-                <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-card border border-white/5 shadow-lg transition-all duration-300 group-hover:shadow-primary/20 group-hover:border-primary/30 group-hover:-translate-y-1">
-                  {item.manhwaImage ? (
-                    <Image
-                      src={item.manhwaImage}
-                      alt={item.manhwaTitle}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-secondary">
-                      <BookOpen className="w-12 h-12 text-muted-foreground/20" />
+                  <Link
+                    href={`/manhwa/${encodeURIComponent(item.manhwaId)}/read/${encodeURIComponent(item.lastChapterId)}`}
+                    className="flex gap-4 w-full"
+                  >
+                    <div className="relative w-20 h-28 shrink-0 rounded-lg overflow-hidden shadow-lg group-hover/card:scale-105 transition-transform">
+                        {item.manhwaImage ? (
+                            <ImageWithFallback
+                            src={item.manhwaImage}
+                            alt={item.manhwaTitle}
+                            fill
+                            className="object-cover"
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                            <BookOpen className="w-8 h-8 text-gray-600" />
+                            </div>
+                        )}
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                            <div className="bg-white rounded-full p-1.5">
+                                <Play size={12} className="text-black fill-black ml-0.5" />
+                            </div>
+                        </div>
                     </div>
-                  )}
-                  
-                  {/* Progress overlay */}
-                  {progress && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-3">
-                      <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden mb-2">
-                        <div 
-                          className="h-full bg-primary transition-all duration-500 ease-out"
-                          style={{ width: `${progress.progress}%` }}
-                        />
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-white font-medium truncate pr-2">{item.lastChapterTitle}</span>
-                        <span className="text-primary font-bold whitespace-nowrap">
-                          {Math.round(progress.progress)}%
-                        </span>
-                      </div>
+                    
+                    <div className="flex-1 flex flex-col justify-center min-w-0">
+                        <h3 className="text-white font-bold text-sm truncate group-hover/card:text-blue-400 transition-colors mb-1">
+                            {item.manhwaTitle}
+                        </h3>
+                        <p className="text-gray-400 text-xs mb-3 truncate">
+                            {item.lastChapterTitle}
+                        </p>
+                        
+                        {/* Progress Bar */}
+                        {progress && (
+                            <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                <div 
+                                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
+                                    style={{ width: `${progress.progress}%`}} 
+                                />
+                            </div>
+                        )}
+                        {progress && (
+                            <span className="text-[10px] text-gray-500 mt-1 font-medium text-right">
+                                {Math.round(progress.progress)}%
+                            </span>
+                        )}
                     </div>
-                  )}
-                </div>
-                
-                <div className="mt-3">
-                  <h3 className="text-sm font-bold text-white line-clamp-1 group-hover:text-primary transition-colors">
-                    {item.manhwaTitle}
-                  </h3>
-                </div>
-              </Link>
+                  </Link>
+              </div>
             </motion.div>
           );
         })}

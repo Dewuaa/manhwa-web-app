@@ -23,11 +23,9 @@ export default function GlobalError({
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-8 h-8 text-red-500" />
             </div>
-            
-            <h2 className="text-2xl font-bold text-white mb-2">
-              Critical Error
-            </h2>
-            
+
+            <h2 className="text-2xl font-bold text-white mb-2">Critical Error</h2>
+
             <p className="text-gray-400 mb-6">
               A critical error occurred. Please try refreshing the page.
             </p>
@@ -39,10 +37,10 @@ export default function GlobalError({
               >
                 Refresh
               </button>
-              
+
               <Link
                 href="/"
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-medium transition-all"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-medium transition-all"
               >
                 <Home className="w-4 h-4" />
                 Home

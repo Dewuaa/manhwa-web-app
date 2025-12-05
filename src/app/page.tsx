@@ -3,296 +3,450 @@
 import { useState, useEffect } from 'react';
 import { manhwaAPI } from '@/lib/api';
 import { Provider, Manhwa } from '@/lib/types';
-import ManhwaCard from '@/components/ManhwaCard';
-import { ManhwaGridSkeleton } from '@/components/LoadingSkeleton';
-import { Flame, TrendingUp, Heart, Sparkles } from 'lucide-react';
+import {
+  Flame,
+  Swords,
+  Heart,
+  Sparkles,
+  Laugh,
+  Star,
+  CheckCircle,
+  Search,
+  Bell,
+  Frown,
+  Zap,
+  Clock,
+} from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { getReadingHistory, getBookmarks, ReadingHistory, Bookmark } from '@/lib/storage';
-import Pagination from '@/components/Pagination';
-import { motion } from 'framer-motion';
+import { Hero } from '@/components/zenith/Hero';
+import { CategoryRow } from '@/components/zenith/CategoryRow';
+import { AtmosphericBackground } from '@/components/zenith/AtmosphericBackground';
+import { SectionHeader } from '@/components/zenith/SectionHeader';
 import ContinueReading from '@/components/ContinueReading';
-import HeroCarousel from '@/components/HeroCarousel';
-import Navbar from '@/components/Navbar';
+import { FreshUpdates } from '@/components/zenith/FreshUpdates';
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05
-    }
-  }
-};
+const CATEGORIES = [
+  'Popular',
+  'New',
+  'Action',
+  'Romance',
+  'Fantasy',
+  'Comedy',
+  'Completed',
+];
 
 export default function Home() {
   const router = useRouter();
-  const [manhwaList, setManhwaList] = useState<Manhwa[]>([]);
-  const [hotManhwa, setHotManhwa] = useState<Manhwa[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [provider] = useState<Provider>(Provider.MANHUAUS);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
-  const [activeTab, setActiveTab] = useState<'latest' | 'bookmarks'>('latest');
-  const [page, setPage] = useState(1);
-  const [hasNextPage, setHasNextPage] = useState(true);
+  const [provider] = useState<Provider>(Provider.MANHUAPLUS);
+  const [activeCategory, setActiveCategory] = useState('Popular');
+
+  // State for each section
+  const [heroManhwa, setHeroManhwa] = useState<Manhwa[]>([]);
+  const [trendingManhwa, setTrendingManhwa] = useState<Manhwa[]>([]);
+  const [freshUpdatesManhwa, setFreshUpdatesManhwa] = useState<Manhwa[]>([]);
+  const [actionManhwa, setActionManhwa] = useState<Manhwa[]>([]);
+  const [romanceManhwa, setRomanceManhwa] = useState<Manhwa[]>([]);
+  const [fantasyManhwa, setFantasyManhwa] = useState<Manhwa[]>([]);
+  const [comedyManhwa, setComedyManhwa] = useState<Manhwa[]>([]);
+  const [topRatedManhwa, setTopRatedManhwa] = useState<Manhwa[]>([]);
+  const [completedManhwa, setCompletedManhwa] = useState<Manhwa[]>([]);
+
+  // Loading states
+  const [loadingStates, setLoadingStates] = useState({
+    hero: true,
+    trending: true,
+    freshUpdates: true,
+    action: true,
+    romance: true,
+    fantasy: true,
+    comedy: true,
+    topRated: true,
+    completed: true,
+  });
 
   useEffect(() => {
-    loadManhwa(1);
-    loadHotManhwa();
-    setBookmarks(getBookmarks());
-  }, [provider, searchQuery]);
+    loadAllSections();
+  }, [provider]);
 
-  const loadManhwa = async (pageNum: number) => {
-    try {
-      setLoading(true);
-      setError(null);
-      manhwaAPI.setProvider(provider);
+  const loadAllSections = async () => {
+    manhwaAPI.setProvider(provider);
 
-      const query = searchQuery;
-      let result;
-      
-      if (query) {
-        result = await manhwaAPI.search(query, pageNum);
-      } else {
-        result = await manhwaAPI.getLatestManhwa(pageNum);
-      }
-      
-      setManhwaList(result.results);
-      setHasNextPage(result.hasNextPage);
-      setPage(pageNum);
-      
-      if (pageNum > 1) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    } catch (err) {
-      setError('Failed to load manhwa. Please try again.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    // Load all sections in parallel with different data sources
+    Promise.all([
+      loadHeroSection(),
+      loadTrendingSection(),
+      loadFreshUpdatesSection(),
+      loadGenreSectionWithSearch('martial arts', setActionManhwa, 'action'),
+      loadRomanceSection(),
+      loadFantasySection(),
+      loadGenreSectionWithSearch('comedy', setComedyManhwa, 'comedy'),
+      loadTopRatedSection(),
+      loadCompletedSection(),
+    ]);
   };
 
-  const handlePageChange = (newPage: number) => {
-    loadManhwa(newPage);
-  };
-
-  const loadHotManhwa = async () => {
+  const loadHeroSection = async () => {
     try {
-      manhwaAPI.setProvider(provider);
       const popularQueries = ['solo leveling', 'return', 'reincarnation', 'system'];
-      const randomQuery = popularQueries[Math.floor(Math.random() * popularQueries.length)];
+      const randomQuery =
+        popularQueries[Math.floor(Math.random() * popularQueries.length)];
       const result = await manhwaAPI.search(randomQuery);
-      setHotManhwa(result.results.slice(0, 8));
+      setHeroManhwa(result.results.slice(0, 8));
     } catch (err) {
-      console.error('Failed to load hot manhwa:', err);
+      console.error('Failed to load hero:', err);
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, hero: false }));
     }
   };
 
-  const handleSearch = (query: string) => {
-    if (query.trim()) {
-      router.push(`/search?query=${encodeURIComponent(query)}`);
+  const loadTrendingSection = async () => {
+    try {
+      // Get trending manhwa by combining results from multiple popular search terms
+      const popularTerms = ['revenge', 'reincarnation', 'dungeon', 'system', 'martial'];
+      const allResults: Manhwa[] = [];
+
+      // Fetch from multiple search terms in parallel
+      const searchPromises = popularTerms.map((term) =>
+        manhwaAPI.search(term, 1).catch(() => ({ results: [] })),
+      );
+
+      const responses = await Promise.all(searchPromises);
+
+      // Combine all results
+      responses.forEach((response) => {
+        if (response.results) {
+          allResults.push(...response.results);
+        }
+      });
+
+      // Remove duplicates by id and shuffle
+      const uniqueResults = allResults.filter(
+        (item, index, self) => index === self.findIndex((t) => t.id === item.id),
+      );
+
+      // Shuffle the results for variety
+      const shuffled = uniqueResults.sort(() => Math.random() - 0.5);
+
+      setTrendingManhwa(shuffled.slice(0, 15));
+    } catch (err) {
+      console.error('Failed to load trending:', err);
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, trending: false }));
+    }
+  };
+
+  const loadFreshUpdatesSection = async () => {
+    try {
+      // Get actual latest/new releases from the scraper
+      const result = await manhwaAPI.getLatestManhwa(1);
+      setFreshUpdatesManhwa(result.results.slice(0, 12));
+    } catch (err) {
+      console.error('Failed to load fresh updates:', err);
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, freshUpdates: false }));
+    }
+  };
+
+  // Use search with specific terms for each genre to get different results
+  const loadGenreSectionWithSearch = async (
+    searchTerm: string,
+    setter: React.Dispatch<React.SetStateAction<Manhwa[]>>,
+    loadingKey: string,
+  ) => {
+    try {
+      const result = await manhwaAPI.search(searchTerm, 1);
+      setter(result.results.slice(0, 15));
+    } catch (err) {
+      console.error(`Failed to load ${searchTerm}:`, err);
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, [loadingKey]: false }));
+    }
+  };
+
+  const loadFantasySection = async () => {
+    try {
+      // Get fantasy manhwa by combining results from multiple fantasy-related terms
+      const fantasyTerms = [
+        'fantasy',
+        'magic',
+        'dragon',
+        'isekai',
+        'mage',
+        'sword',
+        'hero',
+      ];
+      const allResults: Manhwa[] = [];
+
+      // Fetch from multiple search terms in parallel
+      const searchPromises = fantasyTerms.map((term) =>
+        manhwaAPI.search(term, 1).catch(() => ({ results: [] })),
+      );
+
+      const responses = await Promise.all(searchPromises);
+
+      // Combine all results
+      responses.forEach((response) => {
+        if (response.results) {
+          allResults.push(...response.results);
+        }
+      });
+
+      // Remove duplicates by id and shuffle
+      const uniqueResults = allResults.filter(
+        (item, index, self) => index === self.findIndex((t) => t.id === item.id),
+      );
+
+      // Shuffle the results for variety
+      const shuffled = uniqueResults.sort(() => Math.random() - 0.5);
+
+      setFantasyManhwa(shuffled.slice(0, 15));
+    } catch (err) {
+      console.error('Failed to load fantasy:', err);
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, fantasy: false }));
+    }
+  };
+
+  const loadRomanceSection = async () => {
+    try {
+      // Get romance manhwa by combining results from multiple romance-related terms
+      const romanceTerms = [
+        'romance',
+        'love',
+        'marriage',
+        'empress',
+        'princess',
+        'duke',
+        'villainess',
+      ];
+      const allResults: Manhwa[] = [];
+
+      // Fetch from multiple search terms in parallel
+      const searchPromises = romanceTerms.map((term) =>
+        manhwaAPI.search(term, 1).catch(() => ({ results: [] })),
+      );
+
+      const responses = await Promise.all(searchPromises);
+
+      // Combine all results
+      responses.forEach((response) => {
+        if (response.results) {
+          allResults.push(...response.results);
+        }
+      });
+
+      // Remove duplicates by id and shuffle
+      const uniqueResults = allResults.filter(
+        (item, index, self) => index === self.findIndex((t) => t.id === item.id),
+      );
+
+      // Shuffle the results for variety
+      const shuffled = uniqueResults.sort(() => Math.random() - 0.5);
+
+      setRomanceManhwa(shuffled.slice(0, 15));
+    } catch (err) {
+      console.error('Failed to load romance:', err);
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, romance: false }));
+    }
+  };
+
+  const loadTopRatedSection = async () => {
+    try {
+      // Use search with popular terms as proxy for "top rated"
+      const result = await manhwaAPI.search('murim');
+      setTopRatedManhwa(result.results.slice(0, 15));
+    } catch (err) {
+      console.error('Failed to load top rated:', err);
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, topRated: false }));
+    }
+  };
+
+  const loadCompletedSection = async () => {
+    try {
+      const result = await manhwaAPI.advancedSearch({
+        status: 'completed',
+        page: 1,
+      });
+      setCompletedManhwa(result.results.slice(0, 15));
+    } catch (err) {
+      console.error('Failed to load completed:', err);
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, completed: false }));
     }
   };
 
   return (
-    <div className="min-h-screen pt-16 md:pt-20 pb-24 md:pb-12">
-      <Navbar onSearch={handleSearch} />
-      
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Hero Section */}
-        {!searchQuery && hotManhwa.length > 0 && (
-          <HeroCarousel manhwaList={hotManhwa} />
-        )}
+    <div className="min-h-screen pb-24 relative">
+      <AtmosphericBackground />
 
-        {/* Continue Reading Section */}
-        {!searchQuery && <ContinueReading />}
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8 mt-8">
-          {/* Main Content */}
-          <div>
-            {/* Section Header with Tabs */}
-            <div className="flex items-center mb-6 space-x-6 border-b border-white/5 pb-1">
-              <button
-                onClick={() => setActiveTab('latest')}
-                className={`flex items-center pb-4 border-b-2 transition-all ${
-                  activeTab === 'latest'
-                    ? 'border-primary text-white'
-                    : 'border-transparent text-gray-500 hover:text-gray-300'
-                }`}
-              >
-                <TrendingUp className={`w-5 h-5 mr-2 ${activeTab === 'latest' ? 'text-primary' : ''}`} />
-                <span className="font-bold uppercase tracking-wide text-sm">Latest Updates</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('bookmarks')}
-                className={`flex items-center pb-4 border-b-2 transition-all ${
-                  activeTab === 'bookmarks'
-                    ? 'border-primary text-white'
-                    : 'border-transparent text-gray-500 hover:text-gray-300'
-                }`}
-              >
-                <Heart className={`w-5 h-5 mr-2 ${activeTab === 'bookmarks' ? 'text-primary' : ''}`} />
-                <span className="font-bold uppercase tracking-wide text-sm">Bookmarks</span>
-                {bookmarks.length > 0 && (
-                  <span className="ml-2 px-2 py-0.5 bg-white/10 rounded-full text-xs font-bold text-gray-300">
-                    {bookmarks.length}
-                  </span>
-                )}
-              </button>
+      {/* Home Header */}
+      <div className="sticky top-0 z-40 bg-gray-950/80 backdrop-blur-md border-b border-white/5">
+        <div className="flex justify-between items-center px-4 h-16 max-w-7xl mx-auto w-full">
+          <div className="flex items-center gap-2.5">
+            {/* Logo visible only on mobile, moved to sidebar on desktop */}
+            <div className="md:hidden w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 flex items-center justify-center shadow-[0_0_15px_rgba(147,51,234,0.5)]">
+              <span className="text-white font-black text-lg leading-none">墨</span>
+            </div>
+            <div className="flex flex-col md:hidden">
+              <span className="text-white font-bold tracking-tight text-lg leading-none">
+                Inkora
+              </span>
+              <span className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">
+                Manga & Manhwa
+              </span>
             </div>
 
-            {/* Error State */}
-            {error && activeTab === 'latest' && (
-              <div className="p-6 bg-red-500/10 border-l-4 border-red-500 rounded-xl text-red-400 mb-8 ring-1 ring-red-500/20">
-                <div className="flex items-center">
-                  <div className="text-2xl mr-3">⚠️</div>
-                  <div>
-                    <p className="font-semibold">Error Loading Content</p>
-                    <p className="text-sm text-red-400/80">{error}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Content Grid */}
-            {activeTab === 'latest' ? (
-              loading ? (
-                <ManhwaGridSkeleton />
-              ) : manhwaList.length === 0 ? (
-                <div className="text-center py-20 bg-white/5 rounded-2xl ring-1 ring-white/10">
-                  <div className="text-7xl mb-6">🔍</div>
-                  <h3 className="text-2xl font-bold text-white mb-3">No results found</h3>
-                  <p className="text-gray-400 text-lg">
-                    Try searching for something else or browse our collection
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <motion.div 
-                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    {manhwaList.map((manhwa, index) => (
-                      <ManhwaCard 
-                        key={manhwa.id} 
-                        manhwa={manhwa} 
-                        showNewBadge={index < 3}
-                      />
-                    ))}
-                  </motion.div>
-                  
-                  {/* Pagination */}
-                  {activeTab === 'latest' && !loading && manhwaList.length > 0 && (
-                    <div className="mt-12">
-                      <Pagination
-                        currentPage={page}
-                        hasNextPage={hasNextPage}
-                        onPageChange={handlePageChange}
-                        isLoading={loading}
-                      />
-                    </div>
-                  )}
-                </>
-              )
-            ) : (
-              // Bookmarks Grid
-              bookmarks.length === 0 ? (
-                <div className="text-center py-20 bg-white/5 rounded-2xl ring-1 ring-white/10">
-                  <div className="text-7xl mb-6">💔</div>
-                  <h3 className="text-2xl font-bold text-white mb-3">No bookmarks yet</h3>
-                  <p className="text-gray-400 text-lg mb-6">
-                    Save your favorite manhwa to access them quickly here
-                  </p>
-                  <button
-                    onClick={() => setActiveTab('latest')}
-                    className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition-colors"
-                  >
-                    Browse Manhwa
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {bookmarks.map((bookmark) => (
-                    <ManhwaCard
-                      key={bookmark.id}
-                      manhwa={{
-                        id: bookmark.id,
-                        title: bookmark.title,
-                        image: bookmark.image,
-                        status: 'Unknown',
-                        latestChapter: '',
-                      }}
-                    />
-                  ))}
-                </div>
-              )
-            )}
+            {/* Desktop Welcome Message */}
+            <div className="hidden md:flex flex-col">
+              <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">
+                Welcome Back
+              </span>
+              <span className="text-white font-bold text-lg">Traveler</span>
+            </div>
           </div>
 
-          {/* Sidebar - Hot Manga (Desktop Only) */}
-          <div className="hidden lg:block">
-            <div className="sticky top-24 space-y-6">
-              {/* Trending Widget */}
-              <div className="glass-card rounded-2xl p-6">
-                <div className="flex items-center mb-6">
-                  <div className="p-2 bg-primary/10 rounded-lg mr-3">
-                    <Flame className="w-5 h-5 text-primary animate-pulse" />
-                  </div>
-                  <h3 className="font-black text-lg uppercase tracking-wide">Trending Now</h3>
-                </div>
+          {/* Desktop Categories (Center) */}
+          <div className="hidden md:flex gap-2">
+            {CATEGORIES.slice(0, 5).map((cat, i) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105 ${
+                  activeCategory === cat
+                    ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                    : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
 
-                <div className="space-y-4">
-                  {hotManhwa.slice(0, 5).map((manhwa, index) => (
-                    <Link
-                      key={manhwa.id}
-                      href={`/manhwa/${encodeURIComponent(manhwa.id)}`}
-                      className="flex items-center group"
-                    >
-                      <div className="relative w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
-                        {manhwa.image && (
-                          <Image
-                            src={manhwa.image}
-                            alt={manhwa.title}
-                            fill
-                            className="object-cover group-hover:scale-110 transition-transform duration-300"
-                          />
-                        )}
-                        <div className="absolute top-0 left-0 w-6 h-6 bg-black/60 backdrop-blur-md flex items-center justify-center rounded-br-lg border-r border-b border-white/10">
-                          <span className={`text-xs font-bold ${index < 3 ? 'text-primary' : 'text-white'}`}>
-                            #{index + 1}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="ml-4 flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-white line-clamp-2 group-hover:text-primary transition-colors leading-tight mb-1">
-                          {manhwa.title}
-                        </h4>
-                        <div className="flex items-center text-xs text-gray-400">
-                          <Sparkles className="w-3 h-3 mr-1 text-yellow-400" />
-                          <span>9.{9 - index} Rating</span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-
-                <button 
-                  onClick={() => setSearchQuery('popular')}
-                  className="w-full mt-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold text-sm transition-all border border-white/5"
-                >
-                  View All Trending
-                </button>
-              </div>
-            </div>
+          <div className="flex gap-3">
+            <Link
+              href="/search"
+              className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-all border border-white/5"
+            >
+              <Search size={20} />
+            </Link>
+            <button className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-all border border-white/5 relative">
+              <Bell size={20} />
+              <span className="absolute top-2.5 right-3 w-2 h-2 bg-red-500 rounded-full shadow-[0_0_5px_rgba(239,68,68,0.8)]"></span>
+            </button>
           </div>
         </div>
+
+        {/* Categories Scroll (Mobile Only) */}
+        <div className="md:hidden overflow-x-auto hide-scrollbar flex gap-2.5 px-4 pb-3 pt-1">
+          {CATEGORIES.map((cat, i) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all active:scale-95 border ${
+                activeCategory === cat
+                  ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                  : 'bg-black/40 text-gray-400 border-white/10 hover:border-white/30 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        {/* Hero Section - Always visible or filtered? Keep it visible but maybe filtered. 
+            For now, let's keep it static or random as per current implementation. 
+        */}
+        {!loadingStates.hero && heroManhwa.length > 0 && (
+          <Hero featuredManga={heroManhwa} />
+        )}
+
+        {/* Continue Reading - Only on Popular/Home */}
+        {activeCategory === 'Popular' && <ContinueReading />}
+
+        {/* Dynamic Content Area */}
+        {(() => {
+          // Determine which data to show based on activeCategory
+          let currentList: Manhwa[] = [];
+          let loading = false;
+          let title = '';
+          let icon = null;
+
+          switch (activeCategory) {
+            case 'Popular':
+              currentList = trendingManhwa;
+              loading = loadingStates.trending;
+              title = 'Trending Now';
+              icon = <Flame className="w-6 h-6 text-orange-500" />;
+              break;
+            case 'New':
+              // Use fresh updates (page 2 of latest) for New category
+              currentList = freshUpdatesManhwa;
+              loading = loadingStates.freshUpdates;
+              title = 'Latest Releases';
+              icon = <Clock className="w-6 h-6 text-blue-400" />;
+              break;
+            case 'Action':
+              currentList = actionManhwa;
+              loading = loadingStates.action;
+              title = 'Top Action';
+              icon = <Swords className="w-6 h-6 text-red-500" />;
+              break;
+            case 'Romance':
+              currentList = romanceManhwa;
+              loading = loadingStates.romance;
+              title = 'Top Romance';
+              icon = <Heart className="w-6 h-6 text-pink-500" />;
+              break;
+            case 'Fantasy':
+              currentList = fantasyManhwa;
+              loading = loadingStates.fantasy;
+              title = 'Top Fantasy';
+              icon = <Sparkles className="w-6 h-6 text-purple-500" />;
+              break;
+            case 'Comedy':
+              currentList = comedyManhwa;
+              loading = loadingStates.comedy;
+              title = 'Top Comedy';
+              icon = <Laugh className="w-6 h-6 text-yellow-500" />;
+              break;
+            case 'Completed':
+              currentList = completedManhwa;
+              loading = loadingStates.completed;
+              title = 'Completed Series';
+              icon = <CheckCircle className="w-6 h-6 text-green-500" />;
+              break;
+            default:
+              currentList = trendingManhwa;
+              loading = loadingStates.trending;
+              title = `Top ${activeCategory}`;
+              icon = <Flame className="w-6 h-6 text-orange-500" />;
+          }
+
+          return (
+            <>
+              {/* Main Grid Section */}
+              <CategoryRow
+                title={title}
+                icon={icon}
+                manhwaList={currentList}
+                viewAllLink={`/genres/${activeCategory.toLowerCase()}`}
+                loading={loading}
+                layout="scroll"
+              />
+
+              {/* Fresh Updates Section - Using latest manhwa updates */}
+              <FreshUpdates
+                manhwaList={freshUpdatesManhwa}
+                loading={loadingStates.freshUpdates}
+              />
+            </>
+          );
+        })()}
       </div>
     </div>
   );

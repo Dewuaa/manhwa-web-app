@@ -1,11 +1,11 @@
 {
-  "name": "Manhwa Reader",
-  "short_name": "Manhwa",
-  "description": "Read your favorite Korean manhwa and webtoons",
+  "name": "Inkora - Manga & Manhwa",
+  "short_name": "Inkora",
+  "description": "Your ultimate destination for reading manga and manhwa online",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
-  "theme_color": "#ef4444",
+  "theme_color": "#9333ea",
   "orientation": "portrait",
   "icons": [
     {

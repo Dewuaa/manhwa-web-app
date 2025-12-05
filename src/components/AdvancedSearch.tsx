@@ -29,28 +29,37 @@ interface AdvancedSearchProps {
     sort?: string;
     genres?: string[];
   };
-  onSearch?: (values: { query: string; status: string; sort: string; genres: string[] }) => void;
+  onSearch?: (values: {
+    query: string;
+    status: string;
+    sort: string;
+    genres: string[];
+  }) => void;
   className?: string;
 }
 
-export default function AdvancedSearch({ initialValues, onSearch, className = '' }: AdvancedSearchProps) {
+export default function AdvancedSearch({
+  initialValues,
+  onSearch,
+  className = '',
+}: AdvancedSearchProps) {
   const router = useRouter();
   const [query, setQuery] = useState(initialValues?.query || '');
   const [status, setStatus] = useState(initialValues?.status || '');
   const [sort, setSort] = useState(initialValues?.sort || 'latest');
-  const [selectedGenres, setSelectedGenres] = useState<string[]>(initialValues?.genres || []);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(
+    initialValues?.genres || [],
+  );
   const [isExpanded, setIsExpanded] = useState(true);
   const [loadingRandom, setLoadingRandom] = useState(false);
-  
+
   // Use cached genres hook
   const { data: genresData, isLoading: loadingGenres } = useGenres();
   const genres = genresData || [];
 
   const toggleGenre = (genre: string) => {
-    setSelectedGenres(prev => 
-      prev.includes(genre) 
-        ? prev.filter(g => g !== genre)
-        : [...prev, genre]
+    setSelectedGenres((prev) =>
+      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre],
     );
   };
 
@@ -74,9 +83,10 @@ export default function AdvancedSearch({ initialValues, onSearch, className = ''
       // Fetch a random page from latest updates (1-50)
       const randomPage = Math.floor(Math.random() * 50) + 1;
       const results = await manhwaAPI.getLatestManhwa(randomPage);
-      
+
       if (results.results.length > 0) {
-        const randomManhwa = results.results[Math.floor(Math.random() * results.results.length)];
+        const randomManhwa =
+          results.results[Math.floor(Math.random() * results.results.length)];
         router.push(`/manhwa/${encodeURIComponent(randomManhwa.id)}`);
       }
     } catch (error) {
@@ -87,8 +97,10 @@ export default function AdvancedSearch({ initialValues, onSearch, className = ''
   };
 
   return (
-    <div className={`bg-[#1a1a1a] rounded-2xl border border-white/10 overflow-hidden ${className}`}>
-      <div 
+    <div
+      className={`bg-[#1a1a1a] rounded-2xl border border-white/10 overflow-hidden ${className}`}
+    >
+      <div
         className="p-4 flex items-center justify-between cursor-pointer bg-white/5 hover:bg-white/10 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
@@ -96,7 +108,9 @@ export default function AdvancedSearch({ initialValues, onSearch, className = ''
           <Filter className="w-5 h-5 text-red-500" />
           <span>Advanced Filters</span>
         </div>
-        <div className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+        <div
+          className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+        >
           <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-gray-400" />
         </div>
       </div>
@@ -170,7 +184,10 @@ export default function AdvancedSearch({ initialValues, onSearch, className = ''
           {/* Genres */}
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-              Genres {loadingGenres && <span className="text-xs text-gray-600">(Loading...)</span>}
+              Genres{' '}
+              {loadingGenres && (
+                <span className="text-xs text-gray-600">(Loading...)</span>
+              )}
             </label>
             <div className="flex flex-wrap gap-2">
               {genres.map((genre) => {
@@ -197,7 +214,7 @@ export default function AdvancedSearch({ initialValues, onSearch, className = ''
             <button
               onClick={handleSurpriseMe}
               disabled={loadingRandom}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-linear-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loadingRandom ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -211,7 +228,7 @@ export default function AdvancedSearch({ initialValues, onSearch, className = ''
 
             <button
               onClick={handleSearch}
-              className="flex-[2] px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 flex items-center justify-center space-x-2"
+              className="flex-[2] px-6 py-3 bg-linear-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 flex items-center justify-center space-x-2"
             >
               <Search className="w-5 h-5" />
               <span>Search Results</span>

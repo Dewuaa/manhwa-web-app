@@ -34,7 +34,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         query,
         page,
         status: status as 'ongoing' | 'completed' | 'canceled',
-        sort: sort as 'latest' | 'alphabet' | 'rating' | 'trending' | 'views' | 'new-manga',
+        sort: sort as
+          | 'latest'
+          | 'alphabet'
+          | 'rating'
+          | 'trending'
+          | 'views'
+          | 'new-manga',
         genres,
       });
     } catch (err) {
@@ -56,14 +62,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {/* Header */}
       <div className="px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto">
         <h1 className="text-3xl md:text-4xl font-black text-white mb-8 tracking-tight">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-pink-600">
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-pink-600">
             Discover
           </span>{' '}
           Manhwa
         </h1>
 
         {/* Advanced Search Component */}
-        <AdvancedSearch 
+        <AdvancedSearch
           initialValues={{
             query,
             status,
@@ -95,10 +101,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-12">
               {searchResults.results.map((manhwa) => (
-                <ManhwaCard 
-                  key={manhwa.id} 
-                  manhwa={manhwa} 
-                />
+                <ManhwaCard key={manhwa.id} manhwa={manhwa} />
               ))}
             </div>
 

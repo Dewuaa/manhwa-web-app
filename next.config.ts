@@ -86,7 +86,40 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**.mangadex.org',
       },
-      // ManhuaUS
+      // ManhuaPlus
+      {
+        protocol: 'https',
+        hostname: 'manhuaplus.top',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.manhuaplus.top',
+      },
+      {
+        protocol: 'https',
+        hostname: 'manhuaplus.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.manhuaplus.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.manhuaplus.us',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.manhuaplus.us',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.manhuaplus.cc',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.manhuaplus.cc',
+      },
+      // ManhuaUS (legacy - for old bookmarks)
       {
         protocol: 'https',
         hostname: 'manhuaus.com',
