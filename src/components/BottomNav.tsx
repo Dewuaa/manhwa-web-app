@@ -17,6 +17,11 @@ export default function BottomNav() {
     { path: '/history', icon: History, label: 'History' },
   ];
 
+  // Hide bottom nav on reader pages
+  if (pathname?.includes('/read/')) {
+    return null;
+  }
+
   return (
     <>
       {/* Gradient Fade for Content */}
