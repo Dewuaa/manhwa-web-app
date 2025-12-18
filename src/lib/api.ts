@@ -1,7 +1,7 @@
 import { Provider, SearchResult, ManhwaInfo, ChapterPage, MetadataEnrichment } from './types';
 import { apiCache, CACHE_TTL } from './cache';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://inkora-reader.onrender.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://web-production-2840b.up.railway.app';
 
 export interface AdvancedSearchOptions {
   query?: string;
