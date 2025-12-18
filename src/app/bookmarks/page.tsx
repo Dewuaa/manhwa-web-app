@@ -2,26 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getBookmarks, clearBookmarks, Bookmark } from '@/lib/storage';
-import { ArrowLeft, Trash2, Heart, BookOpen } from 'lucide-react';
-import { Provider } from '@/lib/types';
-import ManhwaCard from '@/components/ManhwaCard';
-import { motion } from 'framer-motion';
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { getBookmarks, clearBookmarks, removeBookmark, Bookmark } from '@/lib/storage';
+import { Search, BookOpen, Trash2, ChevronRight, Heart } from 'lucide-react';
+import { useReadingHistory } from '@/hooks/useReadingHistory';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function BookmarksPage() {
+  const router = useRouter();
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const provider = Provider.MANHUAPLUS;
+  const [activeTab, setActiveTab] = useState<'all' | 'reading' | 'completed'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const { history } = useReadingHistory();
 
   useEffect(() => {
     setBookmarks(getBookmarks());
@@ -33,102 +28,280 @@ export default function BookmarksPage() {
     setShowClearConfirm(false);
   };
 
-  return (
-    <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Header */}
-      <div className="border-b border-white/5 bg-black/40 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link
-              href="/"
-              className="hidden md:inline-flex items-center text-gray-400 hover:text-white transition-colors font-medium"
-            >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Back to Home
-            </Link>
+  const handleRemoveBookmark = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeBookmark(id);
+    setBookmarks(bookmarks.filter((b) => b.id !== id));
+  };
 
-            <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-bold text-white flex items-center">
-                <Heart className="w-5 h-5 mr-2 text-pink-500 fill-pink-500" />
-                Bookmarks
-              </h1>
+  // Get reading progress for each bookmark
+  const getBookmarkProgress = (manhwaId: string) => {
+    const historyItem = history.find((h) => h.manhwaId === manhwaId);
+    if (!historyItem) return null;
+
+    const chaptersRead = historyItem.chaptersRead.length;
+    const totalChapters = historyItem.totalChapters || chaptersRead;
+    const percentage =
+      totalChapters > 0 ? Math.round((chaptersRead / totalChapters) * 100) : 0;
+
+    return {
+      chaptersRead,
+      totalChapters,
+      percentage,
+      lastChapter: historyItem.lastChapterTitle,
+    };
+  };
+
+  // Filter bookmarks based on tab and search
+  const filteredBookmarks = bookmarks.filter((bookmark) => {
+    const matchesSearch = bookmark.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+
+    if (activeTab === 'all') return true;
+
+    const progress = getBookmarkProgress(bookmark.id);
+    if (activeTab === 'reading') {
+      return progress && progress.percentage > 0 && progress.percentage < 100;
+    }
+    if (activeTab === 'completed') {
+      return progress && progress.percentage >= 100;
+    }
+    return true;
+  });
+
+  const readingCount = bookmarks.filter((b) => {
+    const p = getBookmarkProgress(b.id);
+    return p && p.percentage > 0 && p.percentage < 100;
+  }).length;
+
+  const completedCount = bookmarks.filter((b) => {
+    const p = getBookmarkProgress(b.id);
+    return p && p.percentage >= 100;
+  }).length;
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] pb-32">
+      {/* Header */}
+      <div className="sticky top-0 z-40 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-white/5 px-4 md:px-8 pt-4 pb-0">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+              <Heart className="w-6 h-6 text-pink-500 fill-pink-500" />
+              My Library
+            </h1>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowSearch(!showSearch)}
+                className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5"
+              >
+                <Search size={22} />
+              </button>
               {bookmarks.length > 0 && (
                 <button
                   onClick={() => setShowClearConfirm(true)}
-                  className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                  title="Clear Bookmarks"
+                  className="p-2 text-gray-400 hover:text-red-400 transition-colors rounded-full hover:bg-white/5"
+                  title="Clear All"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 size={20} />
                 </button>
               )}
             </div>
           </div>
+
+          {/* Search Input */}
+          <AnimatePresence>
+            {showSearch && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden mb-4"
+              >
+                <input
+                  type="text"
+                  placeholder="Search your library..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
+                  autoFocus
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Tabs */}
+          <div className="flex gap-6 relative">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`pb-3 text-sm font-bold transition-colors relative ${
+                activeTab === 'all' ? 'text-white' : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              All ({bookmarks.length})
+              {activeTab === 'all' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-t-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('reading')}
+              className={`pb-3 text-sm font-bold transition-colors relative ${
+                activeTab === 'reading'
+                  ? 'text-white'
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              Reading ({readingCount})
+              {activeTab === 'reading' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-t-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('completed')}
+              className={`pb-3 text-sm font-bold transition-colors relative ${
+                activeTab === 'completed'
+                  ? 'text-white'
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              Completed ({completedCount})
+              {activeTab === 'completed' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-t-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto p-4 md:p-8">
         {bookmarks.length === 0 ? (
-          <div className="text-center py-20 bg-white/5 rounded-2xl ring-1 ring-white/10">
-            <div className="text-7xl mb-6">💔</div>
-            <h3 className="text-2xl font-bold text-white mb-3">No bookmarks yet</h3>
-            <p className="text-gray-400 text-lg mb-8">
-              Save your favorite manhwa to access them quickly here!
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 text-gray-600">
+              <BookOpen size={40} strokeWidth={1.5} />
+            </div>
+            <h2 className="text-white font-bold text-xl mb-2">Your library is empty</h2>
+            <p className="text-gray-400 max-w-xs mb-8">
+              Looks like you haven&apos;t added any series yet. Explore the collection to
+              find your next adventure.
             </p>
             <Link
-              href="/"
-              className="inline-flex items-center px-6 py-3 bg-linear-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20"
+              href="/search"
+              className="bg-white text-black px-8 py-3 rounded-full font-bold shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:scale-105 transition-transform"
             >
-              Browse Manhwa
+              Explore Now
             </Link>
           </div>
+        ) : filteredBookmarks.length === 0 ? (
+          <div className="py-20 text-center text-gray-500 font-medium">
+            No series found in this category
+          </div>
         ) : (
-          <motion.div
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {bookmarks.map((bookmark) => (
-              <ManhwaCard
-                key={bookmark.id}
-                manhwa={{
-                  id: bookmark.id,
-                  title: bookmark.title,
-                  image: bookmark.image,
-                  status: 'Unknown',
-                  latestChapter: '',
-                }}
-              />
-            ))}
-          </motion.div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredBookmarks.map((bookmark) => {
+              const progress = getBookmarkProgress(bookmark.id);
+              return (
+                <motion.div
+                  key={bookmark.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  onClick={() =>
+                    router.push(`/manhwa/${encodeURIComponent(bookmark.id)}`)
+                  }
+                  className="flex gap-4 p-4 bg-gray-900/40 border border-white/5 rounded-2xl cursor-pointer hover:bg-gray-800/60 hover:border-white/10 transition-all group relative"
+                >
+                  {/* Remove Button */}
+                  <button
+                    onClick={(e) => handleRemoveBookmark(bookmark.id, e)}
+                    className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-400 z-10"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+
+                  <div className="w-20 h-28 shrink-0 rounded-xl overflow-hidden relative shadow-lg">
+                    <Image
+                      src={bookmark.image}
+                      alt={bookmark.title}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                    />
+                  </div>
+                  <div className="flex-1 flex flex-col justify-center min-w-0">
+                    <h3 className="text-white font-bold text-base truncate mb-1 group-hover:text-blue-400 transition-colors">
+                      {bookmark.title}
+                    </h3>
+                    {progress ? (
+                      <>
+                        <p className="text-gray-400 text-xs mb-3">
+                          {progress.lastChapter}
+                        </p>
+
+                        {/* Progress Bar */}
+                        <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden mb-2">
+                          <div
+                            className="bg-blue-500 h-full rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)] transition-all"
+                            style={{ width: `${progress.percentage}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] text-gray-500 font-bold">
+                          <span>{progress.percentage}% Read</span>
+                          <span className="text-blue-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                            Continue <ChevronRight size={10} />
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-gray-500 text-xs">Not started yet</p>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         )}
       </div>
 
-      {/* Clear Bookmarks Confirmation Modal */}
-      {showClearConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#1a1a1a] rounded-2xl p-6 max-w-sm w-full ring-1 ring-white/10 shadow-2xl">
-            <h3 className="text-xl font-bold text-white mb-2">Clear Bookmarks?</h3>
-            <p className="text-gray-400 mb-6">
-              Are you sure you want to remove all bookmarks? This action cannot be undone.
-            </p>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setShowClearConfirm(false)}
-                className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleClearBookmarks}
-                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
-              >
-                Clear All
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Clear Confirmation Modal */}
+      <AnimatePresence>
+        {showClearConfirm && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowClearConfirm(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto bg-gray-900 border border-white/10 rounded-2xl p-6 z-50"
+            >
+              <h3 className="text-xl font-bold text-white mb-2">Clear Library?</h3>
+              <p className="text-gray-400 text-sm mb-6">
+                This will remove all {bookmarks.length} bookmarked series from your
+                library. This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowClearConfirm(false)}
+                  className="flex-1 py-3 bg-white/5 text-white font-semibold rounded-xl hover:bg-white/10 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleClearBookmarks}
+                  className="flex-1 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-500 transition-colors"
+                >
+                  Clear All
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,10 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Sparkles, Compass, Heart, History, Tag, Menu, X } from 'lucide-react';
+import {
+  Search,
+  Sparkles,
+  Compass,
+  Heart,
+  History,
+  Tag,
+  Menu,
+  X,
+  User,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import SearchBar from './SearchBar';
+import SearchModal from './SearchModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavbarProps {
@@ -15,8 +25,8 @@ export default function Navbar({ onSearch }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,18 +36,25 @@ export default function Navbar({ onSearch }: NavbarProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleSearch = (query: string) => {
-    if (query.trim()) {
-      router.push(`/search?query=${encodeURIComponent(query)}`);
-      setIsMobileMenuOpen(false);
-    }
-  };
+  // Keyboard shortcut: Ctrl+K or Cmd+K to open search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchModalOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const navLinks = [
     { href: '/search', label: 'Discover', icon: Compass },
     { href: '/genres', label: 'Genres', icon: Tag },
     { href: '/bookmarks', label: 'Bookmarks', icon: Heart },
     { href: '/history', label: 'History', icon: History },
+    { href: '/profile', label: 'Profile', icon: User },
   ];
 
   return (
@@ -56,7 +73,7 @@ export default function Navbar({ onSearch }: NavbarProps) {
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-black text-white tracking-tight hidden sm:block">
-              manhwa<span className="text-primary">.</span>
+              Inkora<span className="text-primary">.</span>
             </span>
           </Link>
 
@@ -82,18 +99,39 @@ export default function Navbar({ onSearch }: NavbarProps) {
             })}
           </div>
 
-          {/* Search Bar - Compact on Desktop */}
-          <div className="flex-1 max-w-md hidden md:block">
-            <SearchBar initialQuery={searchQuery} onSearch={handleSearch} />
-          </div>
-
-          {/* Mobile Menu Toggle */}
+          {/* Search Button - Opens Modal */}
           <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            onClick={() => setIsSearchModalOpen(true)}
+            className="flex-1 max-w-md hidden md:flex items-center gap-3 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all duration-300 group"
           >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            <Search className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" />
+            <span className="text-sm text-gray-500 group-hover:text-gray-400">
+              Search manhwa...
+            </span>
+            <kbd className="ml-auto px-2 py-0.5 text-xs text-gray-600 bg-white/5 rounded border border-white/10">
+              Ctrl+K
+            </kbd>
           </button>
+
+          {/* Mobile Search & Menu */}
+          <div className="flex items-center gap-2 md:hidden">
+            <button
+              onClick={() => setIsSearchModalOpen(true)}
+              className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <Search className="w-6 h-6" />
+            </button>
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -106,33 +144,36 @@ export default function Navbar({ onSearch }: NavbarProps) {
             exit={{ opacity: 0, y: -20 }}
             className="fixed inset-0 z-40 bg-background/95 backdrop-blur-xl pt-20 px-4 md:hidden"
           >
-            <div className="flex flex-col space-y-4">
-              <SearchBar initialQuery={searchQuery} onSearch={handleSearch} />
-              <div className="flex flex-col space-y-2 pt-4">
-                {navLinks.map((link) => {
-                  const isActive = pathname === link.href;
-                  const Icon = link.icon;
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center p-4 rounded-xl text-lg font-bold transition-all ${
-                        isActive
-                          ? 'bg-primary/10 text-primary border border-primary/20'
-                          : 'text-gray-400 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <Icon className="w-6 h-6 mr-4" />
-                      {link.label}
-                    </Link>
-                  );
-                })}
-              </div>
+            <div className="flex flex-col space-y-2">
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href;
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center p-4 rounded-xl text-lg font-bold transition-all ${
+                      isActive
+                        ? 'bg-primary/10 text-primary border border-primary/20'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Icon className="w-6 h-6 mr-4" />
+                    {link.label}
+                  </Link>
+                );
+              })}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+      />
     </>
   );
 }

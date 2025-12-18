@@ -11,8 +11,8 @@ export const NavBar = () => {
   const navItems = [
     { id: 'home', icon: Home, label: 'Home', href: '/' },
     { id: 'discover', icon: Compass, label: 'Discover', href: '/genres' },
-    { id: 'library', icon: BookOpen, label: 'Library', href: '/history' },
-    // { id: 'me', icon: User, label: 'Me', href: '/profile' }, // Placeholder
+    { id: 'library', icon: BookOpen, label: 'Library', href: '/bookmarks' },
+    { id: 'me', icon: User, label: 'Me', href: '/profile' },
   ];
 
   return (

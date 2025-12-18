@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Compass, Heart, History } from 'lucide-react';
+import { Home, Compass, Heart, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function BottomNav() {
@@ -14,7 +14,7 @@ export default function BottomNav() {
     { path: '/', icon: Home, label: 'Home' },
     { path: '/search', icon: Compass, label: 'Discover' },
     { path: '/bookmarks', icon: Heart, label: 'Saved' },
-    { path: '/history', icon: History, label: 'History' },
+    { path: '/profile', icon: User, label: 'Me' },
   ];
 
   // Hide bottom nav on reader pages

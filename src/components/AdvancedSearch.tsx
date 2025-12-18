@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Filter, Shuffle } from 'lucide-react';
+import { Search, Filter, Shuffle, Loader2 } from 'lucide-react';
 import { manhwaAPI } from '@/lib/api';
 import { useGenres } from '@/hooks/useApi';
+import SearchModal from './SearchModal';
 
 const SORT_OPTIONS = [
   { label: 'Latest', value: 'latest' },
@@ -52,10 +53,23 @@ export default function AdvancedSearch({
   );
   const [isExpanded, setIsExpanded] = useState(true);
   const [loadingRandom, setLoadingRandom] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
-  // Use cached genres hook
   const { data: genresData, isLoading: loadingGenres } = useGenres();
   const genres = genresData || [];
+
+  // Keyboard shortcut: Ctrl+K or Cmd+K to open search modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchModalOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const toggleGenre = (genre: string) => {
     setSelectedGenres((prev) =>
@@ -63,24 +77,30 @@ export default function AdvancedSearch({
     );
   };
 
-  const handleSearch = () => {
+  const handleSearch = (searchQuery?: string) => {
+    const finalQuery = searchQuery || query;
+
     const params = new URLSearchParams();
-    if (query) params.append('query', query);
+    if (finalQuery) params.append('query', finalQuery);
     if (status) params.append('status', status);
     if (sort) params.append('sort', sort);
     if (selectedGenres.length > 0) params.append('genres', selectedGenres.join(','));
 
     if (onSearch) {
-      onSearch({ query, status, sort, genres: selectedGenres });
+      onSearch({ query: finalQuery, status, sort, genres: selectedGenres });
     } else {
       router.push(`/search?${params.toString()}`);
     }
   };
 
+  const handleSuggestionSelect = (suggestion: string) => {
+    setQuery(suggestion);
+    handleSearch(suggestion);
+  };
+
   const handleSurpriseMe = async () => {
     setLoadingRandom(true);
     try {
-      // Fetch a random page from latest updates (1-50)
       const randomPage = Math.floor(Math.random() * 50) + 1;
       const results = await manhwaAPI.getLatestManhwa(randomPage);
 
@@ -98,10 +118,10 @@ export default function AdvancedSearch({
 
   return (
     <div
-      className={`bg-[#1a1a1a] rounded-2xl border border-white/10 overflow-hidden ${className}`}
+      className={`bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] rounded-2xl border border-white/10 overflow-hidden shadow-2xl ${className}`}
     >
       <div
-        className="p-4 flex items-center justify-between cursor-pointer bg-white/5 hover:bg-white/10 transition-colors"
+        className="p-4 flex items-center justify-between cursor-pointer bg-white/5 hover:bg-white/10 transition-all duration-300"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center space-x-2 text-white font-bold">
@@ -109,7 +129,7 @@ export default function AdvancedSearch({
           <span>Advanced Filters</span>
         </div>
         <div
-          className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+          className={`transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
         >
           <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-gray-400" />
         </div>
@@ -117,22 +137,26 @@ export default function AdvancedSearch({
 
       {isExpanded && (
         <div className="p-6 space-y-6">
-          {/* Search Query */}
+          {/* Search Button - Opens Modal */}
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
               Search
+              <span className="ml-2 text-gray-600 normal-case font-normal">
+                (Press Ctrl+K)
+              </span>
             </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="Search by title..."
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 pl-11 text-white focus:outline-none focus:border-red-500/50 transition-colors"
-              />
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-            </div>
+            <button
+              onClick={() => setIsSearchModalOpen(true)}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-black/40 border-2 border-white/10 hover:border-red-500/50 rounded-xl text-left transition-all duration-300 hover:shadow-lg hover:shadow-red-500/10 group"
+            >
+              <Search className="w-5 h-5 text-gray-500 group-hover:text-red-400 transition-colors" />
+              <span className="text-gray-500 group-hover:text-gray-400 transition-colors flex-1">
+                {query || 'Search titles, authors, or tags...'}
+              </span>
+              <kbd className="px-2 py-0.5 text-xs text-gray-600 bg-white/5 rounded border border-white/10">
+                Ctrl+K
+              </kbd>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -146,10 +170,10 @@ export default function AdvancedSearch({
                   <button
                     key={option.value}
                     onClick={() => setSort(option.value)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                       sort === option.value
-                        ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
-                        : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                        ? 'bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-lg shadow-red-500/20 scale-105'
+                        : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white hover:scale-105'
                     }`}
                   >
                     {option.label}
@@ -168,10 +192,10 @@ export default function AdvancedSearch({
                   <button
                     key={option.value}
                     onClick={() => setStatus(option.value)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                       status === option.value
-                        ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
-                        : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                        ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/20 scale-105'
+                        : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white hover:scale-105'
                     }`}
                   >
                     {option.label}
@@ -196,10 +220,10 @@ export default function AdvancedSearch({
                   <button
                     key={genre.slug}
                     onClick={() => toggleGenre(genre.slug)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 border ${
                       isSelected
-                        ? 'bg-white text-black border-white'
-                        : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white'
+                        ? 'bg-white text-black border-white scale-110 shadow-lg shadow-white/20'
+                        : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white hover:scale-105'
                     }`}
                   >
                     {genre.name}
@@ -214,10 +238,10 @@ export default function AdvancedSearch({
             <button
               onClick={handleSurpriseMe}
               disabled={loadingRandom}
-              className="flex-1 px-6 py-3 bg-linear-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-xl font-bold transition-all duration-300 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:scale-105 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {loadingRandom ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
                   <Shuffle className="w-5 h-5" />
@@ -227,8 +251,8 @@ export default function AdvancedSearch({
             </button>
 
             <button
-              onClick={handleSearch}
-              className="flex-[2] px-6 py-3 bg-linear-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 flex items-center justify-center space-x-2"
+              onClick={() => handleSearch()}
+              className="flex-[2] px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-bold transition-all duration-300 shadow-lg shadow-red-500/20 hover:shadow-red-500/40 hover:scale-105 flex items-center justify-center space-x-2"
             >
               <Search className="w-5 h-5" />
               <span>Search Results</span>
@@ -236,6 +260,12 @@ export default function AdvancedSearch({
           </div>
         </div>
       )}
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+      />
     </div>
   );
 }
