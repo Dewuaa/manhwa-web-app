@@ -49,6 +49,7 @@ export const FreshUpdates: React.FC<FreshUpdatesProps> = ({ manhwaList, loading 
                 src={manga.image}
                 alt={manga.title}
                 fill
+                sizes="64px"
                 className="object-cover group-hover:scale-110 transition-transform"
               />
             </div>

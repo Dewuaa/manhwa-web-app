@@ -3,8 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
-import { manhwaAPI } from '@/lib/api';
+import { manhwaAPI, getProxiedImageUrl } from '@/lib/api';
 import { ChapterPage, Provider, ManhwaInfo } from '@/lib/types';
 import {
   ArrowLeft,
@@ -29,6 +28,7 @@ import { addToHistory, isBookmarked, toggleBookmark } from '@/lib/storage';
 import { useReadingHistory } from '@/hooks/useReadingHistory';
 import { motion, AnimatePresence, useMotionValue, PanInfo } from 'framer-motion';
 import { useToast } from '@/contexts/ToastContext';
+import Comments from '@/components/Comments';
 
 interface PageProps {
   params: Promise<{ id: string; chapterId: string }>;
@@ -41,7 +41,6 @@ type ColorMode = 'normal' | 'sepia' | 'dark';
 
 export default function ChapterReaderPage({ params }: PageProps) {
   const router = useRouter();
-  const provider = Provider.MANHUAPLUS;
 
   // Data State
   const [pages, setPages] = useState<ChapterPage[]>([]);
@@ -60,6 +59,7 @@ export default function ChapterReaderPage({ params }: PageProps) {
   const [bookmarked, setBookmarked] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showChapterDrawer, setShowChapterDrawer] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const [chapterSearch, setChapterSearch] = useState('');
 
   // Reader Settings
@@ -124,7 +124,11 @@ export default function ChapterReaderPage({ params }: PageProps) {
 
       setIsPreloading(true);
       try {
-        const nextPages = await manhwaAPI.getChapterPages(nextChapter.id);
+        // Pass source provider for consistent fetching
+        const nextPages = await manhwaAPI.getChapterPages(
+          nextChapter.id,
+          manhwaInfo.provider,
+        );
 
         // Preload first 5 images of next chapter
         const imagesToPreload = nextPages.slice(0, 5);
@@ -386,7 +390,7 @@ export default function ChapterReaderPage({ params }: PageProps) {
   // Logic: Load Manhwa Info
   const loadManhwaInfo = async () => {
     try {
-      manhwaAPI.setProvider(provider);
+      manhwaAPI.setProvider(Provider.UNIFIED);
       const info = await manhwaAPI.getManhwaInfo(decodeURIComponent(manhwaId));
       setManhwaInfo(info);
 
@@ -416,9 +420,14 @@ export default function ChapterReaderPage({ params }: PageProps) {
     try {
       setLoading(true);
       setError(null);
-      manhwaAPI.setProvider(provider);
+      manhwaAPI.setProvider(Provider.UNIFIED);
       const decodedChapterId = decodeURIComponent(chapterId);
-      const chapterPages = await manhwaAPI.getChapterPages(decodedChapterId);
+      // Pass the source provider from manhwaInfo if available
+      const sourceProvider = manhwaInfo?.provider;
+      const chapterPages = await manhwaAPI.getChapterPages(
+        decodedChapterId,
+        sourceProvider,
+      );
       setPages(chapterPages);
     } catch (err) {
       setError('Failed to load chapter');
@@ -671,17 +680,12 @@ export default function ChapterReaderPage({ params }: PageProps) {
           >
             {pages.map((page, index) => (
               <div key={index} className="w-full relative">
-                <Image
-                  src={page.img}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={getProxiedImageUrl(page.img)}
                   alt={`Page ${index + 1}`}
-                  width={0}
-                  height={0}
-                  sizes="100vw"
                   className="w-full h-auto block select-none"
                   loading={index < 5 ? 'eager' : 'lazy'}
-                  quality={90}
-                  placeholder="blur"
-                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAB//2Q=="
                 />
               </div>
             ))}
@@ -724,15 +728,11 @@ export default function ChapterReaderPage({ params }: PageProps) {
                 className="h-full flex items-center justify-center p-4"
               >
                 {pages[currentPageIndex] && (
-                  <Image
-                    src={pages[currentPageIndex].img}
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={getProxiedImageUrl(pages[currentPageIndex].img)}
                     alt={`Page ${currentPageIndex + 1}`}
-                    width={0}
-                    height={0}
-                    sizes="100vw"
                     className={`max-h-full w-auto h-auto object-contain select-none ${imageFit === 'full' ? 'max-w-none' : 'max-w-2xl'}`}
-                    priority
-                    quality={95}
                   />
                 )}
               </motion.div>
@@ -810,9 +810,11 @@ export default function ChapterReaderPage({ params }: PageProps) {
             <span className="text-[10px]">Chapters</span>
           </button>
 
-          <button className="flex flex-col items-center gap-1 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg relative">
+          <button
+            onClick={() => setShowComments(true)}
+            className="flex flex-col items-center gap-1 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg relative"
+          >
             <MessageSquare size={20} />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-gray-950" />
             <span className="text-[10px]">Comments</span>
           </button>
 
@@ -896,6 +898,49 @@ export default function ChapterReaderPage({ params }: PageProps) {
                       </div>
                     </Link>
                   ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Comments Drawer */}
+      <AnimatePresence>
+        {showComments && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowComments(false)}
+              className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="fixed inset-y-0 right-0 z-[70] w-full sm:w-96 bg-[#121212] border-l border-white/10 shadow-2xl flex flex-col"
+            >
+              <div className="p-4 border-b border-white/10 flex items-center justify-between bg-black/20">
+                <h3 className="font-bold text-white flex items-center">
+                  <MessageSquare className="w-5 h-5 mr-2 text-primary" />
+                  Comments
+                </h3>
+                <button
+                  onClick={() => setShowComments(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <Comments
+                  manhwaId={decodeURIComponent(manhwaId)}
+                  chapterId={decodeURIComponent(chapterId)}
+                  manhwaTitle={manhwaInfo?.title}
+                />
               </div>
             </motion.div>
           </>

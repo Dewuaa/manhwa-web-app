@@ -37,7 +37,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24 md:pb-12 pt-20">
+    <div className="min-h-screen bg-[#0a0a0a] pb-32 md:pb-12 pt-20">
       <div className="px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto">
         {/* Header */}
         <h1 className="text-3xl md:text-4xl font-black text-white mb-8 tracking-tight">

@@ -4,6 +4,15 @@ import withPWA from 'next-pwa';
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
+      // API proxy (for images with hotlink protection)
+      {
+        protocol: 'https',
+        hostname: 'web-production-2840b.up.railway.app',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
       {
         protocol: 'https',
         hostname: 'gg.asuracomic.net',
@@ -47,6 +56,15 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: '**.lowee.us',
+      },
+      // 2xstorage CDN
+      {
+        protocol: 'https',
+        hostname: 'img-r1.2xstorage.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.2xstorage.com',
       },
       // ComicK image CDNs
       {
@@ -128,7 +146,27 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**.manhuaus.com',
       },
+      // Supabase Storage (avatars)
+      {
+        protocol: 'https',
+        hostname: 'rekqzsbvvralruplvpve.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+      // API Proxy (for image proxying)
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+      },
+      {
+        protocol: 'https',
+        hostname: 'web-production-2840b.up.railway.app',
+      },
     ],
+    qualities: [75, 90],
   },
   turbopack: {}, // Enable Turbopack compatibility
 };

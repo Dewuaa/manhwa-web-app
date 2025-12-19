@@ -5,9 +5,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { getBookmarks, clearBookmarks, removeBookmark, Bookmark } from '@/lib/storage';
-import { Search, BookOpen, Trash2, ChevronRight, Heart } from 'lucide-react';
+import { Search, BookOpen, Trash2, ChevronRight, Heart, X } from 'lucide-react';
 import { useReadingHistory } from '@/hooks/useReadingHistory';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Tabs } from '@/components/ui';
 
 export default function BookmarksPage() {
   const router = useRouter();
@@ -81,27 +82,33 @@ export default function BookmarksPage() {
     return p && p.percentage >= 100;
   }).length;
 
+  const tabs = [
+    { id: 'all', label: 'All', count: bookmarks.length },
+    { id: 'reading', label: 'Reading', count: readingCount },
+    { id: 'completed', label: 'Completed', count: completedCount },
+  ];
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] pb-32">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-white/5 px-4 md:px-8 pt-4 pb-0">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+      <div className="sticky top-0 z-40 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+          <div className="flex items-center justify-between h-16">
+            <h1 className="text-xl md:text-2xl font-black text-white tracking-tight flex items-center gap-3">
               <Heart className="w-6 h-6 text-pink-500 fill-pink-500" />
               My Library
             </h1>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowSearch(!showSearch)}
-                className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5"
+                className={`p-2 rounded-xl transition-all ${showSearch ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
               >
-                <Search size={22} />
+                <Search size={20} />
               </button>
               {bookmarks.length > 0 && (
                 <button
                   onClick={() => setShowClearConfirm(true)}
-                  className="p-2 text-gray-400 hover:text-red-400 transition-colors rounded-full hover:bg-white/5"
+                  className="p-2 text-gray-400 hover:text-red-400 transition-colors rounded-xl hover:bg-white/5"
                   title="Clear All"
                 >
                   <Trash2 size={20} />
@@ -117,64 +124,44 @@ export default function BookmarksPage() {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden mb-4"
+                className="overflow-hidden py-4"
               >
-                <input
-                  type="text"
-                  placeholder="Search your library..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
-                  autoFocus
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search your library..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-pink-500/50 pr-10"
+                    autoFocus
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                    >
+                      <X size={18} />
+                    </button>
+                  )}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Tabs */}
-          <div className="flex gap-6 relative">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`pb-3 text-sm font-bold transition-colors relative ${
-                activeTab === 'all' ? 'text-white' : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              All ({bookmarks.length})
-              {activeTab === 'all' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-t-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('reading')}
-              className={`pb-3 text-sm font-bold transition-colors relative ${
-                activeTab === 'reading'
-                  ? 'text-white'
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              Reading ({readingCount})
-              {activeTab === 'reading' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-t-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('completed')}
-              className={`pb-3 text-sm font-bold transition-colors relative ${
-                activeTab === 'completed'
-                  ? 'text-white'
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              Completed ({completedCount})
-              {activeTab === 'completed' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-t-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-              )}
-            </button>
-          </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-4 md:p-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 pt-6">
+        {/* Tabs */}
+        <div className="mb-6">
+          <Tabs
+            tabs={tabs}
+            activeTab={activeTab}
+            onChange={(id) => setActiveTab(id as 'all' | 'reading' | 'completed')}
+            variant="underline"
+          />
+        </div>
+
+        {/* Content */}
         {bookmarks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 text-gray-600">
@@ -187,7 +174,7 @@ export default function BookmarksPage() {
             </p>
             <Link
               href="/search"
-              className="bg-white text-black px-8 py-3 rounded-full font-bold shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:scale-105 transition-transform"
+              className="bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-500 hover:scale-105 transition-all"
             >
               Explore Now
             </Link>
@@ -238,7 +225,7 @@ export default function BookmarksPage() {
                         </p>
 
                         {/* Progress Bar */}
-                        <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden mb-2">
+                        <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mb-2">
                           <div
                             className="bg-blue-500 h-full rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)] transition-all"
                             style={{ width: `${progress.percentage}%` }}
@@ -277,7 +264,7 @@ export default function BookmarksPage() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto bg-gray-900 border border-white/10 rounded-2xl p-6 z-50"
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 z-50"
             >
               <h3 className="text-xl font-bold text-white mb-2">Clear Library?</h3>
               <p className="text-gray-400 text-sm mb-6">

@@ -42,6 +42,7 @@ export default function HeroCarousel({ manhwaList }: HeroCarouselProps) {
                 src={featured[currentIndex].image}
                 alt={featured[currentIndex].title}
                 fill
+                sizes="100vw"
                 className="object-cover"
                 priority
                 showIcon={false}

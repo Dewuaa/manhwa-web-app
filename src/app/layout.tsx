@@ -5,6 +5,7 @@ import ScrollToTop from '@/components/ScrollToTop';
 import AppLayout from '@/components/AppLayout';
 import QueryProvider from '@/providers/QueryProvider';
 import { ToastProvider } from '@/contexts/ToastContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -72,10 +73,12 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <QueryProvider>
-          <ToastProvider>
-            <AppLayout>{children}</AppLayout>
-            <ScrollToTop />
-          </ToastProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <AppLayout>{children}</AppLayout>
+              <ScrollToTop />
+            </ToastProvider>
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>

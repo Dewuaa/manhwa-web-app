@@ -15,7 +15,10 @@ export function useLatestManhwa(page: number = 1) {
 export function useGenres() {
   return useQuery({
     queryKey: ['genres'],
-    queryFn: () => manhwaAPI.getGenres(),
+    queryFn: async () => {
+      const genres = await manhwaAPI.getGenres();
+      return genres || [];
+    },
     staleTime: 1000 * 60 * 30, // 30 minutes - genres rarely change
   });
 }

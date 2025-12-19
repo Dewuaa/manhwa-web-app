@@ -13,8 +13,8 @@ export default function GenresPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Fetch popular/trending for the top 10 list
-        const result = await manhwaAPI.getPopular();
+        // Fetch latest/trending manhwa for the top 10 list
+        const result = await manhwaAPI.getLatestManhwa(1);
         setTopManhwa(result?.results || []);
       } catch (error) {
         console.error('Failed to load discover data:', error);

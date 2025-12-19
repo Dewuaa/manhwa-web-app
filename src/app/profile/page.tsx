@@ -16,11 +16,16 @@ import {
   BookMarked,
   History,
   Eye,
+  LogOut,
+  LogIn,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useReadingHistory } from '@/hooks/useReadingHistory';
 import { getBookmarks, clearHistory as clearStorageHistory } from '@/lib/storage';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
+import AvatarUpload from '@/components/AvatarUpload';
+import AuthModal from '@/components/AuthModal';
 
 // Reading stats from history
 interface ReadingStats {
@@ -34,12 +39,14 @@ export default function ProfilePage() {
   const router = useRouter();
   const { success } = useToast();
   const { history, clearHistory } = useReadingHistory();
+  const { user, profile, signOut, isConfigured } = useAuth();
 
   // Settings state
   const [darkMode, setDarkMode] = useState(true);
   const [notifications, setNotifications] = useState(false);
   const [autoPreload, setAutoPreload] = useState(true);
   const [showClearModal, setShowClearModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Stats
   const [stats, setStats] = useState<ReadingStats>({
@@ -136,13 +143,19 @@ export default function ProfilePage() {
   };
 
   // Calculate level based on chapters read
-  const level = Math.floor(stats.totalChaptersRead / 10) + 1;
+  const level = profile?.level || Math.floor(stats.totalChaptersRead / 10) + 1;
   const chaptersToNextLevel = 10 - (stats.totalChaptersRead % 10);
+  const displayName = profile?.username || 'Reader';
+
+  const handleSignOut = async () => {
+    await signOut();
+    success('Signed out successfully');
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] pb-32">
       {/* Ambient Background */}
-      <div className="absolute top-0 inset-x-0 h-64 bg-gradient-to-b from-blue-900/20 to-transparent pointer-events-none" />
+      <div className="absolute top-0 inset-x-0 h-64 bg-linear-to-b from-blue-900/20 to-transparent pointer-events-none" />
 
       <div className="max-w-2xl mx-auto p-4 md:p-8 relative z-10">
         {/* Header */}
@@ -158,31 +171,70 @@ export default function ProfilePage() {
 
         {/* Profile Card */}
         <div className="flex flex-col items-center mb-8">
-          <div className="relative w-28 h-28 mb-4">
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-full animate-pulse opacity-50 blur-md" />
-            <div className="w-full h-full rounded-full border-4 border-[#0a0a0a] relative z-10 bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
-              <span className="text-4xl font-black text-white">R</span>
-            </div>
-            <div className="absolute bottom-1 right-1 z-20 bg-gray-900 border border-white/10 p-1.5 rounded-full">
-              <Shield size={16} className="text-amber-400 fill-amber-400" />
-            </div>
-          </div>
-          <h2 className="text-2xl font-black text-white tracking-tight mb-1">Reader</h2>
-          <span className="text-blue-400 text-xs font-bold bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
-            Level {level} Reader
-          </span>
-          <p className="text-gray-500 text-xs mt-2">
-            {chaptersToNextLevel} chapters to Level {level + 1}
-          </p>
+          {user && isConfigured ? (
+            <>
+              <AvatarUpload
+                currentAvatar={profile?.avatar_url}
+                username={displayName}
+                size="lg"
+              />
+              <h2 className="text-2xl font-black text-white tracking-tight mb-1 mt-4">
+                {displayName}
+              </h2>
+              <span className="text-pink-400 text-xs font-bold bg-pink-500/10 px-3 py-1 rounded-full border border-pink-500/20">
+                Level {level} Reader
+              </span>
+              <p className="text-gray-500 text-xs mt-2">
+                {chaptersToNextLevel} chapters to Level {level + 1}
+              </p>
+              <button
+                onClick={handleSignOut}
+                className="mt-4 flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:text-red-400 transition-colors"
+              >
+                <LogOut size={16} />
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="relative w-28 h-28 mb-4">
+                <div className="absolute inset-0 bg-linear-to-tr from-blue-500 to-purple-500 rounded-full animate-pulse opacity-50 blur-md" />
+                <div className="w-full h-full rounded-full border-4 border-[#0a0a0a] relative z-10 bg-linear-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+                  <span className="text-4xl font-black text-white">R</span>
+                </div>
+                <div className="absolute bottom-1 right-1 z-20 bg-gray-900 border border-white/10 p-1.5 rounded-full">
+                  <Shield size={16} className="text-amber-400 fill-amber-400" />
+                </div>
+              </div>
+              <h2 className="text-2xl font-black text-white tracking-tight mb-1">
+                Reader
+              </h2>
+              <span className="text-blue-400 text-xs font-bold bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
+                Level {level} Reader
+              </span>
+              <p className="text-gray-500 text-xs mt-2">
+                {chaptersToNextLevel} chapters to Level {level + 1}
+              </p>
+              {isConfigured && (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="mt-4 flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-xl transition-colors"
+                >
+                  <LogIn size={16} />
+                  Sign In to Sync
+                </button>
+              )}
+            </>
+          )}
         </div>
 
         {/* Stats Row */}
         <div className="grid grid-cols-3 gap-3 mb-8">
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="bg-gray-900/50 border border-white/5 rounded-2xl p-4 flex flex-col items-center gap-2"
+            className="bg-white/5 border border-white/5 rounded-2xl p-4 flex flex-col items-center gap-2"
           >
-            <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
               <BookOpen size={20} />
             </div>
             <div className="text-center">
@@ -197,7 +249,7 @@ export default function ProfilePage() {
 
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="bg-gray-900/50 border border-white/5 rounded-2xl p-4 flex flex-col items-center gap-2"
+            className="bg-white/5 border border-white/5 rounded-2xl p-4 flex flex-col items-center gap-2"
           >
             <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-400">
               <Heart size={20} />
@@ -212,7 +264,7 @@ export default function ProfilePage() {
 
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="bg-gray-900/50 border border-white/5 rounded-2xl p-4 flex flex-col items-center gap-2"
+            className="bg-white/5 border border-white/5 rounded-2xl p-4 flex flex-col items-center gap-2"
           >
             <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
               <Eye size={20} />
@@ -232,7 +284,7 @@ export default function ProfilePage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push('/bookmarks')}
-            className="flex items-center gap-3 p-4 bg-gray-900/40 border border-white/5 rounded-2xl hover:bg-white/5 transition-colors"
+            className="flex items-center gap-3 p-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/8 transition-colors"
           >
             <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-400">
               <BookMarked size={20} />
@@ -247,9 +299,9 @@ export default function ProfilePage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push('/history')}
-            className="flex items-center gap-3 p-4 bg-gray-900/40 border border-white/5 rounded-2xl hover:bg-white/5 transition-colors"
+            className="flex items-center gap-3 p-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/8 transition-colors"
           >
-            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+            <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
               <History size={20} />
             </div>
             <div className="text-left">
@@ -264,7 +316,7 @@ export default function ProfilePage() {
           <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest ml-1">
             Reader Settings
           </h3>
-          <div className="bg-gray-900/40 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm">
+          <div className="bg-white/5 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm">
             <MenuItem
               icon={Moon}
               label="Dark Mode"
@@ -293,7 +345,7 @@ export default function ProfilePage() {
           <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest ml-1 mt-6">
             Data
           </h3>
-          <div className="bg-gray-900/40 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm">
+          <div className="bg-white/5 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm">
             <MenuItem icon={Download} label="Export Data" onClick={handleExportData} />
             <div className="h-px bg-white/5 mx-4" />
             <button
@@ -310,7 +362,7 @@ export default function ProfilePage() {
           <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest ml-1 mt-6">
             Support
           </h3>
-          <div className="bg-gray-900/40 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm">
+          <div className="bg-white/5 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm">
             <MenuItem
               icon={HelpCircle}
               label="Help & Support"
@@ -372,6 +424,9 @@ export default function ProfilePage() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Auth Modal */}
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 }

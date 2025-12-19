@@ -20,6 +20,7 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manhwa, rank }) => {
           src={manhwa.image}
           alt={manhwa.title}
           fill
+          sizes="(max-width: 640px) 160px, 180px"
           className="object-cover transition-transform duration-700 group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />

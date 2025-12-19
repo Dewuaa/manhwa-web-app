@@ -38,7 +38,8 @@ const CATEGORIES = [
 
 export default function Home() {
   const router = useRouter();
-  const [provider] = useState<Provider>(Provider.MANHUAPLUS);
+  // Use unified provider with automatic fallback
+  const [provider] = useState<Provider>(Provider.UNIFIED);
   const [activeCategory, setActiveCategory] = useState('Popular');
 
   // State for each section
