@@ -33,8 +33,8 @@ export function getProxiedImageUrl(imageUrl: string, referer?: string): string {
 export interface AdvancedSearchOptions {
   query?: string;
   page?: number;
-  status?: 'ongoing' | 'completed' | 'canceled';
-  sort?: 'latest' | 'alphabet' | 'rating' | 'trending' | 'views' | 'new-manga';
+  status?: 'ongoing' | 'completed' | 'all';
+  sort?: 'latest' | 'popular' | 'rating' | 'az';
   genres?: string[];
 }
 
@@ -81,22 +81,6 @@ export class ManhwaAPI {
   async search(query: string, page: number = 1): Promise<SearchResult> {
     const url = `${API_BASE_URL}/manhwa/${this.provider}/${encodeURIComponent(query)}?page=${page}`;
     const cacheKey = `search:${this.provider}:${query}:${page}`;
-
-    return this.fetchWithCache<SearchResult>(url, cacheKey, CACHE_TTL.SHORT);
-  }
-
-  async advancedSearch(options: AdvancedSearchOptions): Promise<SearchResult> {
-    const params = new URLSearchParams();
-    if (options.query) params.append('query', options.query);
-    if (options.page) params.append('page', options.page.toString());
-    if (options.status) params.append('status', options.status);
-    if (options.sort) params.append('sort', options.sort);
-    if (options.genres && options.genres.length > 0) {
-      params.append('genres', options.genres.join(','));
-    }
-
-    const url = `${API_BASE_URL}/manhwa/${this.provider}/advanced-search?${params.toString()}`;
-    const cacheKey = `advanced:${this.provider}:${params.toString()}`;
 
     return this.fetchWithCache<SearchResult>(url, cacheKey, CACHE_TTL.SHORT);
   }
@@ -205,13 +189,7 @@ export class ManhwaAPI {
   }
 
   // Advanced search with multiple filters
-  async advancedSearch(params: {
-    query?: string;
-    genres?: string[];
-    status?: 'ongoing' | 'completed' | 'all';
-    sort?: 'latest' | 'popular' | 'rating' | 'az';
-    page?: number;
-  }): Promise<SearchResult> {
+  async advancedSearch(params: AdvancedSearchOptions): Promise<SearchResult> {
     const { query = '', genres = [], status = 'all', sort = 'latest', page = 1 } = params;
 
     const searchParams = new URLSearchParams();
@@ -229,7 +207,7 @@ export class ManhwaAPI {
     } catch {
       // Fallback to regular search if advanced search not supported
       if (query) {
-        return this.searchManhwa(query, page);
+        return this.search(query, page);
       }
       return this.getLatestManhwa(page);
     }
