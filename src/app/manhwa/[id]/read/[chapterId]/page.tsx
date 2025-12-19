@@ -390,7 +390,7 @@ export default function ChapterReaderPage({ params }: PageProps) {
   // Logic: Load Manhwa Info
   const loadManhwaInfo = async () => {
     try {
-      manhwaAPI.setProvider(Provider.UNIFIED);
+      manhwaAPI.setProvider(Provider.MGEKO);
       const info = await manhwaAPI.getManhwaInfo(decodeURIComponent(manhwaId));
       setManhwaInfo(info);
 
@@ -420,7 +420,7 @@ export default function ChapterReaderPage({ params }: PageProps) {
     try {
       setLoading(true);
       setError(null);
-      manhwaAPI.setProvider(Provider.UNIFIED);
+      manhwaAPI.setProvider(Provider.MGEKO);
       const decodedChapterId = decodeURIComponent(chapterId);
       // Pass the source provider from manhwaInfo if available
       const sourceProvider = manhwaInfo?.provider;

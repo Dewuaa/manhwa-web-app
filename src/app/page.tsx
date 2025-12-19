@@ -38,8 +38,8 @@ const CATEGORIES = [
 
 export default function Home() {
   const router = useRouter();
-  // Use unified provider with automatic fallback
-  const [provider] = useState<Provider>(Provider.UNIFIED);
+  // Use Mgeko provider directly
+  const [provider] = useState<Provider>(Provider.MGEKO);
   const [activeCategory, setActiveCategory] = useState('Popular');
 
   // State for each section
@@ -78,10 +78,10 @@ export default function Home() {
       loadHeroSection(),
       loadTrendingSection(),
       loadFreshUpdatesSection(),
-      loadGenreSectionWithSearch('martial arts', setActionManhwa, 'action'),
+      loadActionSection(),
       loadRomanceSection(),
       loadFantasySection(),
-      loadGenreSectionWithSearch('comedy', setComedyManhwa, 'comedy'),
+      loadComedySection(),
       loadTopRatedSection(),
       loadCompletedSection(),
     ]);
@@ -89,13 +89,25 @@ export default function Home() {
 
   const loadHeroSection = async () => {
     try {
-      const popularQueries = ['solo leveling', 'return', 'reincarnation', 'system'];
+      // Search for popular titles to feature in hero
+      const popularQueries = ['solo leveling', 'martial', 'reincarnation', 'system'];
       const randomQuery =
         popularQueries[Math.floor(Math.random() * popularQueries.length)];
       const result = await manhwaAPI.search(randomQuery);
-      setHeroManhwa(result.results.slice(0, 8));
+      if (result.results.length > 0) {
+        setHeroManhwa(result.results.slice(0, 8));
+      } else {
+        // Fallback to latest if search returns nothing
+        const latest = await manhwaAPI.getLatestManhwa(1);
+        setHeroManhwa(latest.results.slice(0, 8));
+      }
     } catch (err) {
       console.error('Failed to load hero:', err);
+      // Fallback to latest
+      try {
+        const latest = await manhwaAPI.getLatestManhwa(1);
+        setHeroManhwa(latest.results.slice(0, 8));
+      } catch {}
     } finally {
       setLoadingStates((prev) => ({ ...prev, hero: false }));
     }
@@ -103,33 +115,22 @@ export default function Home() {
 
   const loadTrendingSection = async () => {
     try {
-      // Get trending manhwa by combining results from multiple popular search terms
-      const popularTerms = ['revenge', 'reincarnation', 'dungeon', 'system', 'martial'];
-      const allResults: Manhwa[] = [];
-
-      // Fetch from multiple search terms in parallel
-      const searchPromises = popularTerms.map((term) =>
-        manhwaAPI.search(term, 1).catch(() => ({ results: [] })),
-      );
-
-      const responses = await Promise.all(searchPromises);
+      // Load multiple pages in parallel to get more content variety
+      const [page1, page2, page3] = await Promise.all([
+        manhwaAPI.getLatestManhwa(1),
+        manhwaAPI.getLatestManhwa(2),
+        manhwaAPI.getLatestManhwa(3),
+      ]);
 
       // Combine all results
-      responses.forEach((response) => {
-        if (response.results) {
-          allResults.push(...response.results);
-        }
-      });
+      const allResults = [...page1.results, ...page2.results, ...page3.results];
 
-      // Remove duplicates by id and shuffle
+      // Remove duplicates and shuffle
       const uniqueResults = allResults.filter(
         (item, index, self) => index === self.findIndex((t) => t.id === item.id),
       );
-
-      // Shuffle the results for variety
       const shuffled = uniqueResults.sort(() => Math.random() - 0.5);
-
-      setTrendingManhwa(shuffled.slice(0, 15));
+      setTrendingManhwa(shuffled.slice(0, 20));
     } catch (err) {
       console.error('Failed to load trending:', err);
     } finally {
@@ -139,9 +140,16 @@ export default function Home() {
 
   const loadFreshUpdatesSection = async () => {
     try {
-      // Get actual latest/new releases from the scraper
-      const result = await manhwaAPI.getLatestManhwa(1);
-      setFreshUpdatesManhwa(result.results.slice(0, 12));
+      // Get multiple pages for more fresh updates
+      const [page1, page2] = await Promise.all([
+        manhwaAPI.getLatestManhwa(1),
+        manhwaAPI.getLatestManhwa(2),
+      ]);
+      const allResults = [...page1.results, ...page2.results];
+      const uniqueResults = allResults.filter(
+        (item, index, self) => index === self.findIndex((t) => t.id === item.id),
+      );
+      setFreshUpdatesManhwa(uniqueResults.slice(0, 18));
     } catch (err) {
       console.error('Failed to load fresh updates:', err);
     } finally {
@@ -149,59 +157,65 @@ export default function Home() {
     }
   };
 
-  // Use search with specific terms for each genre to get different results
-  const loadGenreSectionWithSearch = async (
-    searchTerm: string,
-    setter: React.Dispatch<React.SetStateAction<Manhwa[]>>,
-    loadingKey: string,
-  ) => {
+  const loadActionSection = async () => {
     try {
-      const result = await manhwaAPI.search(searchTerm, 1);
-      setter(result.results.slice(0, 15));
+      // Search for action-related manhwa
+      const actionTerms = ['dungeon', 'hunter', 'martial', 'battle'];
+      const results = await Promise.all(
+        actionTerms.map((term) => manhwaAPI.search(term).catch(() => ({ results: [] }))),
+      );
+      const allResults = results.flatMap((r) => r.results);
+      const uniqueResults = allResults.filter(
+        (item, index, self) => index === self.findIndex((t) => t.id === item.id),
+      );
+      const shuffled = uniqueResults.sort(() => Math.random() - 0.5);
+      setActionManhwa(shuffled.slice(0, 20));
     } catch (err) {
-      console.error(`Failed to load ${searchTerm}:`, err);
+      console.error('Failed to load action:', err);
     } finally {
-      setLoadingStates((prev) => ({ ...prev, [loadingKey]: false }));
+      setLoadingStates((prev) => ({ ...prev, action: false }));
+    }
+  };
+
+  const loadComedySection = async () => {
+    try {
+      // Search for comedy-related manhwa
+      const comedyTerms = ['comedy', 'funny', 'gag'];
+      const results = await Promise.all(
+        comedyTerms.map((term) => manhwaAPI.search(term).catch(() => ({ results: [] }))),
+      );
+      const allResults = results.flatMap((r) => r.results);
+      const uniqueResults = allResults.filter(
+        (item, index, self) => index === self.findIndex((t) => t.id === item.id),
+      );
+      // If no comedy results, fallback to latest
+      if (uniqueResults.length === 0) {
+        const latest = await manhwaAPI.getLatestManhwa(4);
+        setComedyManhwa(latest.results.slice(0, 15));
+      } else {
+        const shuffled = uniqueResults.sort(() => Math.random() - 0.5);
+        setComedyManhwa(shuffled.slice(0, 20));
+      }
+    } catch (err) {
+      console.error('Failed to load comedy:', err);
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, comedy: false }));
     }
   };
 
   const loadFantasySection = async () => {
     try {
-      // Get fantasy manhwa by combining results from multiple fantasy-related terms
-      const fantasyTerms = [
-        'fantasy',
-        'magic',
-        'dragon',
-        'isekai',
-        'mage',
-        'sword',
-        'hero',
-      ];
-      const allResults: Manhwa[] = [];
-
-      // Fetch from multiple search terms in parallel
-      const searchPromises = fantasyTerms.map((term) =>
-        manhwaAPI.search(term, 1).catch(() => ({ results: [] })),
+      // Search for fantasy-related manhwa
+      const fantasyTerms = ['magic', 'dragon', 'isekai', 'fantasy'];
+      const results = await Promise.all(
+        fantasyTerms.map((term) => manhwaAPI.search(term).catch(() => ({ results: [] }))),
       );
-
-      const responses = await Promise.all(searchPromises);
-
-      // Combine all results
-      responses.forEach((response) => {
-        if (response.results) {
-          allResults.push(...response.results);
-        }
-      });
-
-      // Remove duplicates by id and shuffle
+      const allResults = results.flatMap((r) => r.results);
       const uniqueResults = allResults.filter(
         (item, index, self) => index === self.findIndex((t) => t.id === item.id),
       );
-
-      // Shuffle the results for variety
       const shuffled = uniqueResults.sort(() => Math.random() - 0.5);
-
-      setFantasyManhwa(shuffled.slice(0, 15));
+      setFantasyManhwa(shuffled.slice(0, 20));
     } catch (err) {
       console.error('Failed to load fantasy:', err);
     } finally {
@@ -211,41 +225,23 @@ export default function Home() {
 
   const loadRomanceSection = async () => {
     try {
-      // Get romance manhwa by combining results from multiple romance-related terms
-      const romanceTerms = [
-        'romance',
-        'love',
-        'marriage',
-        'empress',
-        'princess',
-        'duke',
-        'villainess',
-      ];
-      const allResults: Manhwa[] = [];
-
-      // Fetch from multiple search terms in parallel
-      const searchPromises = romanceTerms.map((term) =>
-        manhwaAPI.search(term, 1).catch(() => ({ results: [] })),
+      // Search for romance-related manhwa
+      const romanceTerms = ['romance', 'love', 'marriage', 'dating'];
+      const results = await Promise.all(
+        romanceTerms.map((term) => manhwaAPI.search(term).catch(() => ({ results: [] }))),
       );
-
-      const responses = await Promise.all(searchPromises);
-
-      // Combine all results
-      responses.forEach((response) => {
-        if (response.results) {
-          allResults.push(...response.results);
-        }
-      });
-
-      // Remove duplicates by id and shuffle
+      const allResults = results.flatMap((r) => r.results);
       const uniqueResults = allResults.filter(
         (item, index, self) => index === self.findIndex((t) => t.id === item.id),
       );
-
-      // Shuffle the results for variety
-      const shuffled = uniqueResults.sort(() => Math.random() - 0.5);
-
-      setRomanceManhwa(shuffled.slice(0, 15));
+      // If no romance results, fallback to latest
+      if (uniqueResults.length === 0) {
+        const latest = await manhwaAPI.getLatestManhwa(5);
+        setRomanceManhwa(latest.results.slice(0, 15));
+      } else {
+        const shuffled = uniqueResults.sort(() => Math.random() - 0.5);
+        setRomanceManhwa(shuffled.slice(0, 20));
+      }
     } catch (err) {
       console.error('Failed to load romance:', err);
     } finally {
@@ -255,9 +251,17 @@ export default function Home() {
 
   const loadTopRatedSection = async () => {
     try {
-      // Use search with popular terms as proxy for "top rated"
-      const result = await manhwaAPI.search('murim');
-      setTopRatedManhwa(result.results.slice(0, 15));
+      // Search for top/popular manhwa keywords
+      const topTerms = ['strongest', 'legendary', 'supreme', 'king'];
+      const results = await Promise.all(
+        topTerms.map((term) => manhwaAPI.search(term).catch(() => ({ results: [] }))),
+      );
+      const allResults = results.flatMap((r) => r.results);
+      const uniqueResults = allResults.filter(
+        (item, index, self) => index === self.findIndex((t) => t.id === item.id),
+      );
+      const shuffled = uniqueResults.sort(() => Math.random() - 0.5);
+      setTopRatedManhwa(shuffled.slice(0, 20));
     } catch (err) {
       console.error('Failed to load top rated:', err);
     } finally {

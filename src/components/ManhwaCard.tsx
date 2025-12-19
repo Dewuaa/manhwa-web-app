@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Manhwa } from '@/lib/types';
-import { BookOpen, Star, Clock } from 'lucide-react';
+import { BookOpen, Star, Eye, TrendingUp } from 'lucide-react';
 import ImageWithFallback from './ImageWithFallback';
 
 interface ManhwaCardProps {
@@ -37,7 +37,7 @@ const ManhwaCard = ({ manhwa, showNewBadge, rank }: ManhwaCardProps) => {
         {/* Hover Overlay - Primary Tint */}
         <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        {/* Badges */}
+        {/* Badges - Top Left */}
         <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
           {rank && (
             <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary/90 backdrop-blur-md text-white font-black text-sm shadow-lg ring-1 ring-white/20">
@@ -49,10 +49,26 @@ const ManhwaCard = ({ manhwa, showNewBadge, rank }: ManhwaCardProps) => {
               New
             </span>
           )}
+          {manhwa.isTrending && (
+            <span className="px-2 py-1 bg-orange-500/90 backdrop-blur-md text-white text-[10px] font-bold rounded-lg flex items-center border border-white/10 shadow-lg">
+              <TrendingUp className="w-3 h-3 mr-1" />
+              Hot
+            </span>
+          )}
+        </div>
+
+        {/* Badges - Top Right */}
+        <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
           {manhwa.rating && (
             <span className="px-2 py-1 bg-black/60 backdrop-blur-md text-yellow-400 text-[10px] font-bold rounded-lg flex items-center border border-white/10 shadow-lg">
               <Star className="w-3 h-3 mr-1 fill-yellow-400" />
               {manhwa.rating}
+            </span>
+          )}
+          {manhwa.viewsFormatted && (
+            <span className="px-2 py-1 bg-black/60 backdrop-blur-md text-blue-400 text-[10px] font-bold rounded-lg flex items-center border border-white/10 shadow-lg">
+              <Eye className="w-3 h-3 mr-1" />
+              {manhwa.viewsFormatted}
             </span>
           )}
         </div>

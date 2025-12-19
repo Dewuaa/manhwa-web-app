@@ -146,6 +146,39 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**.manhuaus.com',
       },
+      // Mgeko
+      {
+        protocol: 'https',
+        hostname: 'mgeko.cc',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.mgeko.cc',
+      },
+      {
+        protocol: 'https',
+        hostname: 'mgeko.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.mgeko.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'mgeko4.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.mgeko4.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imgsrv4.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.imgsrv4.com',
+      },
       // Supabase Storage (avatars)
       {
         protocol: 'https',

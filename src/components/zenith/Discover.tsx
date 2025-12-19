@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search,
   Crown,
@@ -16,31 +16,126 @@ import {
 import Link from 'next/link';
 import { Manhwa } from '@/lib/types';
 import ImageWithFallback from '../ImageWithFallback';
+import { manhwaAPI } from '@/lib/api';
 
 interface DiscoverProps {
   topManhwa: Manhwa[];
   loading?: boolean;
 }
 
+// Mapping of genre slugs to colors
+const genreColors: Record<string, string> = {
+  action: 'from-red-500 to-orange-500',
+  adventure: 'from-amber-500 to-yellow-500',
+  comedy: 'from-yellow-400 to-lime-500',
+  cooking: 'from-orange-400 to-red-400',
+  drama: 'from-rose-500 to-pink-500',
+  fantasy: 'from-blue-500 to-cyan-500',
+  'gender-bender': 'from-fuchsia-500 to-pink-500',
+  harem: 'from-pink-400 to-rose-400',
+  historical: 'from-amber-600 to-yellow-600',
+  horror: 'from-gray-700 to-black',
+  isekai: 'from-indigo-500 to-purple-500',
+  josei: 'from-rose-400 to-pink-400',
+  manga: 'from-sky-500 to-blue-500',
+  manhua: 'from-red-600 to-orange-600',
+  manhwa: 'from-blue-600 to-indigo-600',
+  'martial-arts': 'from-emerald-500 to-green-500',
+  mature: 'from-gray-600 to-gray-800',
+  mecha: 'from-slate-500 to-zinc-600',
+  medical: 'from-teal-400 to-cyan-400',
+  mystery: 'from-violet-600 to-purple-600',
+  'one-shot': 'from-lime-500 to-green-500',
+  psychological: 'from-purple-700 to-indigo-700',
+  romance: 'from-pink-500 to-rose-500',
+  'school-life': 'from-sky-400 to-blue-400',
+  'sci-fi': 'from-cyan-500 to-teal-500',
+  seinen: 'from-slate-600 to-gray-700',
+  shoujo: 'from-pink-300 to-rose-400',
+  shounen: 'from-orange-500 to-red-500',
+  'slice-of-life': 'from-green-400 to-emerald-400',
+  sports: 'from-green-500 to-teal-500',
+  supernatural: 'from-violet-500 to-fuchsia-500',
+  tragedy: 'from-gray-800 to-black',
+  webtoons: 'from-lime-400 to-green-500',
+};
+
+// Mapping of genre slugs to icons
+const genreIcons: Record<string, React.ElementType> = {
+  action: Swords,
+  fantasy: Sparkles,
+  romance: Heart,
+  'martial-arts': Flame,
+  isekai: Cpu,
+  horror: Ghost,
+};
+
 export const Discover: React.FC<DiscoverProps> = ({ topManhwa = [], loading }) => {
-  const genres = [
-    { name: 'Action', color: 'from-red-500 to-orange-500', icon: Swords, slug: 'action' },
-    {
-      name: 'Fantasy',
-      color: 'from-blue-500 to-cyan-500',
-      icon: Sparkles,
-      slug: 'fantasy',
-    },
-    { name: 'Romance', color: 'from-pink-500 to-rose-500', icon: Heart, slug: 'romance' },
-    {
-      name: 'Murim',
-      color: 'from-emerald-500 to-green-500',
-      icon: Flame,
-      slug: 'martial-arts',
-    },
-    { name: 'System', color: 'from-indigo-500 to-purple-500', icon: Cpu, slug: 'isekai' },
-    { name: 'Horror', color: 'from-gray-700 to-black', icon: Ghost, slug: 'horror' },
-  ];
+  const [displayGenres, setDisplayGenres] = useState<
+    Array<{
+      name: string;
+      color: string;
+      icon: React.ElementType;
+      slug: string;
+    }>
+  >([]);
+
+  useEffect(() => {
+    const loadGenres = async () => {
+      try {
+        const genres = await manhwaAPI.getGenres();
+        // Take first 6 genres for display
+        const mainGenres = genres.slice(0, 6).map((genre) => ({
+          name: genre.name,
+          color: genreColors[genre.slug] || 'from-gray-500 to-gray-700',
+          icon: genreIcons[genre.slug] || Sparkles,
+          slug: genre.slug,
+        }));
+        setDisplayGenres(mainGenres);
+      } catch (error) {
+        // Fallback to default genres
+        setDisplayGenres([
+          {
+            name: 'Action',
+            color: 'from-red-500 to-orange-500',
+            icon: Swords,
+            slug: 'action',
+          },
+          {
+            name: 'Fantasy',
+            color: 'from-blue-500 to-cyan-500',
+            icon: Sparkles,
+            slug: 'fantasy',
+          },
+          {
+            name: 'Romance',
+            color: 'from-pink-500 to-rose-500',
+            icon: Heart,
+            slug: 'romance',
+          },
+          {
+            name: 'Murim',
+            color: 'from-emerald-500 to-green-500',
+            icon: Flame,
+            slug: 'martial-arts',
+          },
+          {
+            name: 'System',
+            color: 'from-indigo-500 to-purple-500',
+            icon: Cpu,
+            slug: 'isekai',
+          },
+          {
+            name: 'Horror',
+            color: 'from-gray-700 to-black',
+            icon: Ghost,
+            slug: 'horror',
+          },
+        ]);
+      }
+    };
+    loadGenres();
+  }, []);
 
   const collections = [
     {
@@ -87,7 +182,7 @@ export const Discover: React.FC<DiscoverProps> = ({ topManhwa = [], loading }) =
             </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {genres.map((genre) => {
+            {displayGenres.map((genre) => {
               const IconComponent = genre.icon;
               return (
                 <Link

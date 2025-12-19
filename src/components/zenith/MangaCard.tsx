@@ -43,16 +43,11 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manhwa, rank }) => {
                 ? manhwa.rating.toFixed(1)
                 : manhwa.rating}
             </div>
-          ) : manhwa.latestChapter ? (
+          ) : manhwa.latestChapter && manhwa.latestChapter !== 'Unknown' ? (
             <div className="text-blue-400 text-xs font-bold mb-1 truncate">
               {manhwa.latestChapter}
             </div>
-          ) : (
-            <div className="flex items-center gap-1.5 text-yellow-400 text-xs font-bold mb-1">
-              <Star size={12} fill="currentColor" />
-              N/A
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
       <div>
@@ -60,7 +55,10 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manhwa, rank }) => {
           {manhwa.title}
         </h3>
         <p className="text-gray-500 text-xs mt-1 font-medium truncate">
-          {manhwa.genres?.[0] || manhwa.latestChapter}
+          {manhwa.genres?.[0] ||
+            (manhwa.latestChapter && manhwa.latestChapter !== 'Unknown'
+              ? manhwa.latestChapter
+              : null)}
           {manhwa.status && manhwa.status !== 'Unknown' && <> • {manhwa.status}</>}
         </p>
       </div>

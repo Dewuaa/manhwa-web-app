@@ -1,5 +1,6 @@
 export enum Provider {
-  MANHUAPLUS = 'manhuaplus', // Primary provider
+  MGEKO = 'mgeko', // Primary provider
+  MANHUAPLUS = 'manhuaplus',
   MANHUAUS = 'manhuaus',
   UNIFIED = 'unified', // Auto-fallback provider
 }
@@ -12,20 +13,28 @@ export interface Manhwa {
   latestChapter: string;
   latestChapters?: Array<{ title: string; releaseDate: string }>;
   rating?: number | string | null;
+  ratingCount?: number;
+  views?: number;
+  viewsFormatted?: string;
   genres?: string[];
   provider?: string; // Source provider
+  isPopular?: boolean;
+  isTrending?: boolean;
+  updatedAt?: string;
 }
 
 export interface SearchResult {
   currentPage: number;
   hasNextPage: boolean;
+  totalResults?: number;
   results: Manhwa[];
 }
 
 export interface Chapter {
   id: string;
   title: string;
-  releaseDate: string;
+  chapterNumber?: number;
+  releaseDate?: string;
 }
 
 export interface ManhwaInfo {
@@ -38,9 +47,13 @@ export interface ManhwaInfo {
   genres?: string[];
   status: string;
   views?: number;
+  viewsFormatted?: string;
+  rating?: number | string | null;
+  ratingCount?: number;
+  lastUpdate?: string;
+  totalChapters?: number;
   authors?: string[];
   chapters: Chapter[];
-  rating?: number | string | null;
   releaseDate?: string;
   provider?: string; // Source provider for this data
   _fallback?: boolean; // True if fallback provider was used

@@ -41,7 +41,7 @@ export interface AdvancedSearchOptions {
 export class ManhwaAPI {
   private provider: Provider;
 
-  constructor(provider: Provider = Provider.UNIFIED) {
+  constructor(provider: Provider = Provider.MGEKO) {
     this.provider = provider;
   }
 
@@ -131,9 +131,17 @@ export class ManhwaAPI {
     return this.fetchWithCache<ChapterPage[]>(url, cacheKey, CACHE_TTL.HOUR);
   }
 
-  // Get popular/trending manhwa (returns latest updates)
-  async getPopular(): Promise<SearchResult> {
-    return this.getLatestManhwa(1);
+  // Get popular manhwa from jumbo/featured page
+  async getPopular(page: number = 1): Promise<SearchResult> {
+    const url = `${API_BASE_URL}/manhwa/${this.provider}/popular?page=${page}`;
+    const cacheKey = `popular:${this.provider}:${page}`;
+
+    try {
+      return await this.fetchWithCache<SearchResult>(url, cacheKey, CACHE_TTL.MEDIUM);
+    } catch {
+      // Fallback to latest if popular endpoint fails
+      return this.getLatestManhwa(page);
+    }
   }
 
   async getLatestManhwa(page: number = 1): Promise<SearchResult> {
@@ -141,6 +149,16 @@ export class ManhwaAPI {
     const cacheKey = `latest:${this.provider}:${page}`;
 
     return this.fetchWithCache<SearchResult>(url, cacheKey, CACHE_TTL.SHORT);
+  }
+
+  async getTrending(
+    period: 'daily' | 'weekly' | 'monthly' | 'all_time' = 'weekly',
+    page: number = 1,
+  ): Promise<SearchResult> {
+    const url = `${API_BASE_URL}/manhwa/${this.provider}/trending?period=${period}&page=${page}`;
+    const cacheKey = `trending:${this.provider}:${period}:${page}`;
+
+    return this.fetchWithCache<SearchResult>(url, cacheKey, CACHE_TTL.MEDIUM);
   }
 
   async getGenre(slug: string, page: number = 1): Promise<SearchResult> {
@@ -183,6 +201,37 @@ export class ManhwaAPI {
     } catch (error) {
       console.warn('Failed to fetch genres, using defaults:', error);
       return this.defaultGenres;
+    }
+  }
+
+  // Advanced search with multiple filters
+  async advancedSearch(params: {
+    query?: string;
+    genres?: string[];
+    status?: 'ongoing' | 'completed' | 'all';
+    sort?: 'latest' | 'popular' | 'rating' | 'az';
+    page?: number;
+  }): Promise<SearchResult> {
+    const { query = '', genres = [], status = 'all', sort = 'latest', page = 1 } = params;
+
+    const searchParams = new URLSearchParams();
+    if (query) searchParams.append('query', query);
+    if (genres.length > 0) searchParams.append('genres', genres.join(','));
+    if (status !== 'all') searchParams.append('status', status);
+    searchParams.append('sort', sort);
+    searchParams.append('page', page.toString());
+
+    const url = `${API_BASE_URL}/manhwa/${this.provider}/advanced-search?${searchParams.toString()}`;
+    const cacheKey = `advanced-search:${this.provider}:${query}:${genres.join(',')}:${status}:${sort}:${page}`;
+
+    try {
+      return await this.fetchWithCache<SearchResult>(url, cacheKey, CACHE_TTL.MEDIUM);
+    } catch {
+      // Fallback to regular search if advanced search not supported
+      if (query) {
+        return this.searchManhwa(query, page);
+      }
+      return this.getLatestManhwa(page);
     }
   }
 

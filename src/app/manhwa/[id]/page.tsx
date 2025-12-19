@@ -75,7 +75,7 @@ export default function ManhwaDetailPage() {
       setLoading(true);
       setError(null);
       // Use unified provider with automatic fallback
-      manhwaAPI.setProvider(Provider.UNIFIED);
+      manhwaAPI.setProvider(Provider.MGEKO);
 
       // 1. Fetch from unified provider (tries manhuaplus first, falls back to manhuaus)
       const info = await manhwaAPI.getManhwaInfo(decodeURIComponent(id));
@@ -339,17 +339,24 @@ export default function ManhwaDetailPage() {
                 </div>
 
                 <div className="flex-1 pb-1 md:pb-0 min-w-0">
-                  <div className="flex flex-wrap gap-2 mb-2 md:mb-4">
+                  <div className="flex flex-wrap gap-1.5 md:gap-2 mb-2 md:mb-4">
                     {manhwa.genres && manhwa.genres.length > 0 ? (
-                      manhwa.genres.map((genre) => (
-                        <Link
-                          key={genre}
-                          href={`/search?genres=${genre}`}
-                          className="text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-lg bg-white/10 text-blue-200 border border-white/5 backdrop-blur-md hover:bg-white/20 transition-colors cursor-pointer whitespace-nowrap"
-                        >
-                          {genre}
-                        </Link>
-                      ))
+                      <>
+                        {manhwa.genres.slice(0, 5).map((genre) => (
+                          <Link
+                            key={genre}
+                            href={`/search?genres=${genre}`}
+                            className="text-[10px] md:text-xs font-bold px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg bg-white/10 text-blue-200 border border-white/5 backdrop-blur-md hover:bg-white/20 transition-colors cursor-pointer whitespace-nowrap"
+                          >
+                            {genre}
+                          </Link>
+                        ))}
+                        {manhwa.genres.length > 5 && (
+                          <span className="text-[10px] md:text-xs font-medium px-2 py-0.5 md:py-1 rounded-lg bg-white/5 text-gray-400 border border-white/5">
+                            +{manhwa.genres.length - 5} more
+                          </span>
+                        )}
+                      </>
                     ) : (
                       <span className="text-[10px] md:text-xs font-medium px-2.5 py-1 rounded-lg bg-white/5 text-gray-500 border border-white/5">
                         No genres available
@@ -383,34 +390,59 @@ export default function ManhwaDetailPage() {
                     <span className="font-black text-lg md:text-2xl">
                       {manhwa.rating || 'N/A'}
                     </span>
-                    <Heart size={14} fill="currentColor" className="md:w-5 md:h-5" />
+                    <Star size={14} fill="currentColor" className="md:w-5 md:h-5" />
                   </div>
                   <p className="text-[10px] md:text-xs uppercase tracking-wider text-gray-500 font-bold">
-                    Rating
+                    {manhwa.ratingCount ? `(${manhwa.ratingCount})` : 'Rating'}
                   </p>
                 </div>
                 <div className="text-center border-l border-white/10 group">
                   <div className="text-white font-black text-lg md:text-2xl mb-1 group-hover:text-blue-400 transition-colors">
-                    {manhwa.views
-                      ? typeof manhwa.views === 'number'
-                        ? manhwa.views > 1000
-                          ? `${(manhwa.views / 1000).toFixed(1)}K`
+                    {manhwa.viewsFormatted ||
+                      (manhwa.views
+                        ? typeof manhwa.views === 'number'
+                          ? manhwa.views > 1000000
+                            ? `${(manhwa.views / 1000000).toFixed(1)}M`
+                            : manhwa.views > 1000
+                              ? `${(manhwa.views / 1000).toFixed(1)}K`
+                              : manhwa.views
                           : manhwa.views
-                        : 'N/A'
-                      : 'N/A'}
+                        : 'N/A')}
                   </div>
                   <p className="text-[10px] md:text-xs uppercase tracking-wider text-gray-500 font-bold">
-                    Reads
+                    Views
                   </p>
                 </div>
                 <div className="text-center border-l border-white/10 group">
                   <div className="text-green-400 font-black text-lg md:text-2xl mb-1 group-hover:text-green-300 transition-colors">
-                    {manhwa.status}
+                    {manhwa.totalChapters || manhwa.chapters?.length || 0}
                   </div>
                   <p className="text-[10px] md:text-xs uppercase tracking-wider text-gray-500 font-bold">
-                    Status
+                    Chapters
                   </p>
                 </div>
+              </div>
+
+              {/* Status & Last Update Row */}
+              <div className="mt-4 flex flex-wrap gap-3">
+                <span
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 ${
+                    manhwa.status?.toLowerCase() === 'ongoing'
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                      : manhwa.status?.toLowerCase() === 'completed'
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                  }`}
+                >
+                  <BookOpen size={12} />
+                  {manhwa.status || 'Unknown'}
+                </span>
+                {manhwa.lastUpdate && (
+                  <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white/5 text-gray-400 border border-white/10 flex items-center gap-1.5">
+                    <Calendar size={12} />
+                    Updated {manhwa.lastUpdate}
+                  </span>
+                )}
               </div>
 
               {/* AI Insight Section */}
@@ -626,9 +658,7 @@ export default function ManhwaDetailPage() {
                               </p>
                               <div className="flex items-center gap-2 mt-1.5">
                                 <p className="text-gray-500 text-xs md:text-sm font-medium">
-                                  {chapter.releaseDate
-                                    ? new Date(chapter.releaseDate).toLocaleDateString()
-                                    : 'Just now'}
+                                  {chapter.releaseDate || 'Just now'}
                                 </p>
 
                                 {/* Status Indicators */}
