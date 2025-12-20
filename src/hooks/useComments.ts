@@ -100,6 +100,17 @@ export function useComments({ manhwaId, chapterId }: UseCommentsOptions) {
 
       try {
         console.log('useComments: Fetching comments for', manhwaId);
+
+        // Create a timeout promise to prevent hanging forever
+        const timeoutPromise = new Promise<{ data: null; error: Error }>((resolve) => {
+          setTimeout(() => {
+            resolve({
+              data: null,
+              error: new Error('Request timed out after 10 seconds'),
+            });
+          }, 10000);
+        });
+
         // Single optimized query to get all comments with their profiles
         let query = supabase
           .from('comments')
@@ -124,8 +135,10 @@ export function useComments({ manhwaId, chapterId }: UseCommentsOptions) {
           query = query.is('chapter_id', null);
         }
 
-        // Execute query
-        const { data: allComments, error: commentsError } = await query;
+        // Execute query with timeout - race between query and timeout
+        const result = await Promise.race([query.then((res) => res), timeoutPromise]);
+
+        const { data: allComments, error: commentsError } = result;
 
         console.log(
           'useComments: Query complete, comments:',
