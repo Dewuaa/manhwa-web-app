@@ -4,6 +4,7 @@ import React from 'react';
 import { Home, Compass, BookOpen, User, Settings, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 
 export const NavBar = () => {
   const pathname = usePathname();
@@ -63,9 +64,15 @@ export const NavBar = () => {
         <div className="mb-12">
           <Link
             href="/"
-            className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 flex items-center justify-center shadow-[0_0_20px_rgba(147,51,234,0.4)] group cursor-pointer hover:scale-105 transition-transform"
+            className="w-12 h-12 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(147,51,234,0.4)] group cursor-pointer hover:scale-105 transition-transform"
           >
-            <span className="text-white font-black text-2xl leading-none">墨</span>
+            <Image
+              src="/icon-192.png"
+              alt="Inkora"
+              width={48}
+              height={48}
+              className="w-full h-full object-cover"
+            />
           </Link>
         </div>
 

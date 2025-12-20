@@ -63,9 +63,9 @@ export const metadata: Metadata = {
       'Read manga and manhwa online for free. Discover thousands of titles updated daily.',
     images: [
       {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
+        url: '/icon-512.png',
+        width: 512,
+        height: 512,
         alt: 'Inkora - Read Manga & Manhwa Online',
       },
     ],
@@ -75,7 +75,7 @@ export const metadata: Metadata = {
     title: 'Inkora - Read Manga & Manhwa Online Free',
     description:
       'Read manga and manhwa online for free. Discover thousands of titles updated daily.',
-    images: ['/og-image.png'],
+    images: ['/icon-512.png'],
   },
   robots: {
     index: true,
@@ -110,7 +110,9 @@ export default function RootLayout({
           content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes"
         />
         <meta name="theme-color" content="#9333ea" />
-        <link rel="icon" href="/icon-192.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+        <link rel="shortcut icon" href="/icon-192.png" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <WebsiteJsonLd />
         <OrganizationJsonLd />
