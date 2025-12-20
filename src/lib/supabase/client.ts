@@ -7,9 +7,14 @@ export function createClient() {
   if (!supabaseUrl || !supabaseAnonKey) {
     console.warn(
       'Supabase credentials not configured. Comments feature will be disabled.',
+      'URL:',
+      supabaseUrl ? 'SET' : 'MISSING',
+      'KEY:',
+      supabaseAnonKey ? 'SET' : 'MISSING',
     );
     return null;
   }
+  console.log('Supabase client created successfully');
   return createBrowserClient(supabaseUrl, supabaseAnonKey);
 }
 
