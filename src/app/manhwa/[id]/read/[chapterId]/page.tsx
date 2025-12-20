@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { addToHistory, isBookmarked, toggleBookmark } from '@/lib/storage';
 import { useReadingHistory } from '@/hooks/useReadingHistory';
+import { useCloudSyncContext } from '@/contexts/CloudSyncContext';
 import { motion, AnimatePresence, useMotionValue, PanInfo } from 'framer-motion';
 import { useToast } from '@/contexts/ToastContext';
 import Comments from '@/components/Comments';
@@ -78,6 +79,7 @@ export default function ChapterReaderPage({ params }: PageProps) {
 
   const { success } = useToast();
   const { markChapterRead, getChapterProgress } = useReadingHistory();
+  const { updateProgress, isEnabled: cloudSyncEnabled } = useCloudSyncContext();
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const hasRestoredScroll = useRef(false);
@@ -273,11 +275,34 @@ export default function ChapterReaderPage({ params }: PageProps) {
           manhwaInfo.chapters.length,
           roundedProgress,
         );
+
+        // Sync to cloud if enabled (debounced - only sync every 10% or on completion)
+        if (cloudSyncEnabled && (roundedProgress % 10 === 0 || roundedProgress >= 90)) {
+          updateProgress({
+            manhwaId: decodeURIComponent(manhwaId),
+            manhwaTitle: manhwaInfo.title,
+            manhwaImage: manhwaInfo.image,
+            lastChapterId: decodedChapterId,
+            lastChapterTitle: currentChapter.title || `Chapter ${decodedChapterId}`,
+            timestamp: Date.now(),
+            chaptersRead: roundedProgress >= 90 ? [decodedChapterId] : [],
+            chapterProgress: { [decodedChapterId]: roundedProgress },
+            totalChapters: manhwaInfo.chapters.length,
+          });
+        }
       }
     }, 1000); // Save every 1 second of inactivity or scroll pause
 
     return () => clearTimeout(timer);
-  }, [scrollProgress, manhwaId, chapterId, manhwaInfo, markChapterRead]);
+  }, [
+    scrollProgress,
+    manhwaId,
+    chapterId,
+    manhwaInfo,
+    markChapterRead,
+    cloudSyncEnabled,
+    updateProgress,
+  ]);
 
   const toggleControls = () => setShowControls((prev) => !prev);
 

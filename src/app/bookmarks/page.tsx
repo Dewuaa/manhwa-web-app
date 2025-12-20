@@ -5,10 +5,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { getBookmarks, clearBookmarks, removeBookmark, Bookmark } from '@/lib/storage';
-import { Search, BookOpen, Trash2, ChevronRight, Heart, X } from 'lucide-react';
+import { Search, BookOpen, Trash2, ChevronRight, Heart, X, List } from 'lucide-react';
 import { useReadingHistory } from '@/hooks/useReadingHistory';
+import { useLists } from '@/contexts/ListsContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs } from '@/components/ui';
+import { AddToListModal } from '@/components/AddToListModal';
 
 export default function BookmarksPage() {
   const router = useRouter();
@@ -17,7 +19,14 @@ export default function BookmarksPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'reading' | 'completed'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [listModalOpen, setListModalOpen] = useState(false);
+  const [selectedManhwa, setSelectedManhwa] = useState<{
+    id: string;
+    title: string;
+    image: string;
+  } | null>(null);
   const { history } = useReadingHistory();
+  const { getManhwaLists } = useLists();
 
   useEffect(() => {
     setBookmarks(getBookmarks());
@@ -33,6 +42,16 @@ export default function BookmarksPage() {
     e.stopPropagation();
     removeBookmark(id);
     setBookmarks(bookmarks.filter((b) => b.id !== id));
+  };
+
+  const handleAddToList = (bookmark: Bookmark, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedManhwa({
+      id: bookmark.id,
+      title: bookmark.title,
+      image: bookmark.image,
+    });
+    setListModalOpen(true);
   };
 
   // Get reading progress for each bookmark
@@ -89,16 +108,23 @@ export default function BookmarksPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-32">
+    <div className="min-h-screen bg-[#0a0a0a] pb-24 sm:pb-32">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="flex items-center justify-between h-16">
-            <h1 className="text-xl md:text-2xl font-black text-white tracking-tight flex items-center gap-3">
-              <Heart className="w-6 h-6 text-pink-500 fill-pink-500" />
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-4 md:px-6">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-tight flex items-center gap-2 sm:gap-3">
+              <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-pink-500 fill-pink-500" />
               My Library
             </h1>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Link
+                href="/lists"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600/20 text-purple-400 rounded-lg text-sm font-medium hover:bg-purple-600/30 transition-colors"
+              >
+                <List size={16} />
+                <span className="hidden sm:inline">My Lists</span>
+              </Link>
               <button
                 onClick={() => setShowSearch(!showSearch)}
                 className={`p-2 rounded-xl transition-all ${showSearch ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
@@ -197,13 +223,27 @@ export default function BookmarksPage() {
                   }
                   className="flex gap-4 p-4 bg-gray-900/40 border border-white/5 rounded-2xl cursor-pointer hover:bg-gray-800/60 hover:border-white/10 transition-all group relative"
                 >
-                  {/* Remove Button */}
-                  <button
-                    onClick={(e) => handleRemoveBookmark(bookmark.id, e)}
-                    className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-400 z-10"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  {/* Action Buttons */}
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <button
+                      onClick={(e) => handleAddToList(bookmark, e)}
+                      className={`p-1.5 rounded-full transition-colors ${
+                        getManhwaLists(bookmark.id).length > 0
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-black/60 text-gray-400 hover:text-purple-400'
+                      }`}
+                      title="Add to List"
+                    >
+                      <List size={14} />
+                    </button>
+                    <button
+                      onClick={(e) => handleRemoveBookmark(bookmark.id, e)}
+                      className="p-1.5 bg-black/60 rounded-full text-gray-400 hover:text-red-400"
+                      title="Remove"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
 
                   <div className="w-20 h-28 shrink-0 rounded-xl overflow-hidden relative shadow-lg">
                     <Image
@@ -289,6 +329,18 @@ export default function BookmarksPage() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Add to List Modal */}
+      {selectedManhwa && (
+        <AddToListModal
+          isOpen={listModalOpen}
+          onClose={() => {
+            setListModalOpen(false);
+            setSelectedManhwa(null);
+          }}
+          manhwa={selectedManhwa}
+        />
+      )}
     </div>
   );
 }

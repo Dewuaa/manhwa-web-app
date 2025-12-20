@@ -12,7 +12,6 @@ import {
   Star,
   CheckCircle,
   Search,
-  Bell,
   Frown,
   Zap,
   Clock,
@@ -25,6 +24,8 @@ import { AtmosphericBackground } from '@/components/zenith/AtmosphericBackground
 import { SectionHeader } from '@/components/zenith/SectionHeader';
 import ContinueReading from '@/components/ContinueReading';
 import { FreshUpdates } from '@/components/zenith/FreshUpdates';
+import { RecommendationsRow } from '@/components/RecommendationsRow';
+import { NotificationBell } from '@/components/NotificationBell';
 
 const CATEGORIES = [
   'Popular',
@@ -89,18 +90,28 @@ export default function Home() {
 
   const loadHeroSection = async () => {
     try {
-      // Search for popular titles to feature in hero
-      const popularQueries = ['solo leveling', 'martial', 'reincarnation', 'system'];
-      const randomQuery =
-        popularQueries[Math.floor(Math.random() * popularQueries.length)];
-      const result = await manhwaAPI.search(randomQuery);
-      if (result.results.length > 0) {
-        setHeroManhwa(result.results.slice(0, 8));
-      } else {
-        // Fallback to latest if search returns nothing
-        const latest = await manhwaAPI.getLatestManhwa(1);
-        setHeroManhwa(latest.results.slice(0, 8));
-      }
+      // Get fresh latest updates for hero - more variety than searching specific titles
+      const [page1, page2] = await Promise.all([
+        manhwaAPI.getLatestManhwa(1),
+        manhwaAPI.getLatestManhwa(2),
+      ]);
+
+      // Combine and deduplicate by ID AND title (to catch duplicates with different IDs)
+      const allResults = [...page1.results, ...page2.results];
+      const seen = new Set<string>();
+      const uniqueResults = allResults.filter((item) => {
+        const normalizedTitle = item.title.toLowerCase().trim();
+        if (seen.has(item.id) || seen.has(normalizedTitle)) {
+          return false;
+        }
+        seen.add(item.id);
+        seen.add(normalizedTitle);
+        return true;
+      });
+
+      // Shuffle and take top 8 for hero carousel
+      const shuffled = uniqueResults.sort(() => Math.random() - 0.5);
+      setHeroManhwa(shuffled.slice(0, 8));
     } catch (err) {
       console.error('Failed to load hero:', err);
       // Fallback to latest
@@ -288,18 +299,20 @@ export default function Home() {
       <AtmosphericBackground />
 
       {/* Home Header */}
-      <div className="sticky top-0 z-40 bg-gray-950/80 backdrop-blur-md border-b border-white/5">
-        <div className="flex justify-between items-center px-4 h-16 max-w-7xl mx-auto w-full">
-          <div className="flex items-center gap-2.5">
+      <div className="sticky top-0 z-40 bg-gray-950/90 backdrop-blur-xl border-b border-white/5">
+        <div className="flex justify-between items-center px-3.5 sm:px-4 h-14 sm:h-16 max-w-7xl mx-auto w-full">
+          <div className="flex items-center gap-2">
             {/* Logo visible only on mobile, moved to sidebar on desktop */}
-            <div className="md:hidden w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 flex items-center justify-center shadow-[0_0_15px_rgba(147,51,234,0.5)]">
-              <span className="text-white font-black text-lg leading-none">墨</span>
+            <div className="md:hidden w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 flex items-center justify-center shadow-[0_0_15px_rgba(147,51,234,0.5)]">
+              <span className="text-white font-black text-base sm:text-lg leading-none">
+                墨
+              </span>
             </div>
             <div className="flex flex-col md:hidden">
-              <span className="text-white font-bold tracking-tight text-lg leading-none">
+              <span className="text-white font-bold tracking-tight text-base sm:text-lg leading-none">
                 Inkora
               </span>
-              <span className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">
+              <span className="text-[9px] sm:text-[10px] text-gray-400 font-medium tracking-wider uppercase">
                 Manga & Manhwa
               </span>
             </div>
@@ -330,27 +343,24 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <Link
               href="/search"
-              className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-all border border-white/5"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-all border border-white/5 active:scale-95"
             >
-              <Search size={20} />
+              <Search className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
             </Link>
-            <button className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-all border border-white/5 relative">
-              <Bell size={20} />
-              <span className="absolute top-2.5 right-3 w-2 h-2 bg-red-500 rounded-full shadow-[0_0_5px_rgba(239,68,68,0.8)]"></span>
-            </button>
+            <NotificationBell />
           </div>
         </div>
 
         {/* Categories Scroll (Mobile Only) */}
-        <div className="md:hidden overflow-x-auto hide-scrollbar flex gap-2.5 px-4 pb-3 pt-1">
+        <div className="md:hidden overflow-x-auto hide-scrollbar flex gap-2 px-3.5 sm:px-4 pb-2.5 sm:pb-3 pt-0.5 sm:pt-1">
           {CATEGORIES.map((cat, i) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all active:scale-95 border ${
+              className={`px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all active:scale-95 border ${
                 activeCategory === cat
                   ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
                   : 'bg-black/40 text-gray-400 border-white/10 hover:border-white/30 hover:text-white hover:bg-white/5'
@@ -362,7 +372,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <div className="relative z-10 max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pt-4 sm:pt-6">
         {/* Hero Section - Always visible or filtered? Keep it visible but maybe filtered. 
             For now, let's keep it static or random as per current implementation. 
         */}
@@ -372,6 +382,11 @@ export default function Home() {
 
         {/* Continue Reading - Only on Popular/Home */}
         {activeCategory === 'Popular' && <ContinueReading />}
+
+        {/* Personalized Recommendations - Only on Popular/Home */}
+        {activeCategory === 'Popular' && (
+          <RecommendationsRow availableManhwa={trendingManhwa} />
+        )}
 
         {/* Dynamic Content Area */}
         {(() => {

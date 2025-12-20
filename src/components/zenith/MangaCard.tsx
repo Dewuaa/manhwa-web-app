@@ -13,9 +13,9 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manhwa, rank }) => {
   return (
     <Link
       href={`/manhwa/${encodeURIComponent(manhwa.id)}`}
-      className="snap-center flex-none w-[160px] md:w-[180px] flex flex-col gap-3 group cursor-pointer"
+      className="snap-center flex-none w-[130px] sm:w-[145px] md:w-[160px] lg:w-[180px] flex flex-col gap-2 sm:gap-3 group cursor-pointer"
     >
-      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl bg-gray-900 border border-white/5 group-hover:border-blue-500/30 transition-colors">
+      <div className="relative aspect-[3/4] rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl bg-gray-900 border border-white/5 group-hover:border-blue-500/30 transition-colors">
         <ImageWithFallback
           src={manhwa.image}
           alt={manhwa.title}
@@ -51,10 +51,10 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manhwa, rank }) => {
         </div>
       </div>
       <div>
-        <h3 className="text-gray-100 font-bold text-sm leading-tight line-clamp-2 group-hover:text-blue-400 transition-colors">
+        <h3 className="text-gray-100 font-semibold sm:font-bold text-xs sm:text-sm leading-tight line-clamp-2 group-hover:text-blue-400 transition-colors">
           {manhwa.title}
         </h3>
-        <p className="text-gray-500 text-xs mt-1 font-medium truncate">
+        <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5 sm:mt-1 font-medium truncate">
           {manhwa.genres?.[0] ||
             (manhwa.latestChapter && manhwa.latestChapter !== 'Unknown'
               ? manhwa.latestChapter

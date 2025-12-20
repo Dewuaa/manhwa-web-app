@@ -11,10 +11,12 @@ import {
   Menu,
   X,
   User,
+  List,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import SearchModal from './SearchModal';
+import { NotificationBell } from './NotificationBell';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavbarProps {
@@ -52,8 +54,8 @@ export default function Navbar({ onSearch }: NavbarProps) {
   const navLinks = [
     { href: '/search', label: 'Discover', icon: Compass },
     { href: '/genres', label: 'Genres', icon: Tag },
+    { href: '/lists', label: 'Lists', icon: List },
     { href: '/bookmarks', label: 'Bookmarks', icon: Heart },
-    { href: '/history', label: 'History', icon: History },
     { href: '/profile', label: 'Profile', icon: User },
   ];
 
@@ -113,8 +115,14 @@ export default function Navbar({ onSearch }: NavbarProps) {
             </kbd>
           </button>
 
+          {/* Notification Bell - Desktop */}
+          <div className="hidden md:block">
+            <NotificationBell />
+          </div>
+
           {/* Mobile Search & Menu */}
           <div className="flex items-center gap-2 md:hidden">
+            <NotificationBell />
             <button
               onClick={() => setIsSearchModalOpen(true)}
               className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"

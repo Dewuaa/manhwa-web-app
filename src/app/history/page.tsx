@@ -81,29 +81,29 @@ export default function LibraryPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-32">
+    <div className="min-h-screen bg-[#0a0a0a] pb-24 sm:pb-32">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="flex items-center justify-between h-16">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-4 md:px-6">
+          <div className="flex items-center justify-between h-14 sm:h-16">
             <button
               onClick={() => router.push('/')}
-              className="p-2 -ml-2 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/5"
+              className="p-1.5 sm:p-2 -ml-1.5 sm:-ml-2 text-gray-400 hover:text-white transition-colors rounded-lg sm:rounded-xl hover:bg-white/5 active:scale-95"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
             </button>
-            <h1 className="text-xl md:text-2xl font-black text-white flex items-center gap-3">
-              <History className="text-blue-500" size={24} />
+            <h1 className="text-lg sm:text-xl md:text-2xl font-black text-white flex items-center gap-2 sm:gap-3">
+              <History className="text-blue-500 w-5 h-5 sm:w-6 sm:h-6" />
               My Library
             </h1>
-            <div className="w-10" /> {/* Spacer for centering */}
+            <div className="w-8 sm:w-10" /> {/* Spacer for centering */}
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 pt-6">
-        <div className="mb-6">
+      <div className="max-w-7xl mx-auto px-3.5 sm:px-4 md:px-6 pt-4 sm:pt-6">
+        <div className="mb-4 sm:mb-6">
           <Tabs
             tabs={tabs}
             activeTab={activeTab}
@@ -112,18 +112,18 @@ export default function LibraryPage() {
           />
         </div>
         {currentList.length === 0 ? (
-          <div className="text-center py-20 bg-white/5 rounded-2xl border border-white/10">
-            <div className="text-6xl mb-4">
+          <div className="text-center py-12 sm:py-20 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
+            <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">
               {activeTab === 'bookmarks' ? '📚' : activeTab === 'history' ? '📖' : '✅'}
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
               {activeTab === 'bookmarks'
                 ? 'No bookmarks yet'
                 : activeTab === 'history'
                   ? 'No reading history'
                   : 'No completed series'}
             </h3>
-            <p className="text-gray-400 mb-6">
+            <p className="text-gray-400 text-sm sm:text-base mb-4 sm:mb-6 px-4">
               {activeTab === 'bookmarks'
                 ? 'Add manhwa to your library to see them here!'
                 : activeTab === 'history'
@@ -132,18 +132,18 @@ export default function LibraryPage() {
             </p>
             <Link
               href="/"
-              className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all"
+              className="inline-flex items-center px-5 sm:px-6 py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg sm:rounded-xl font-bold transition-all text-sm sm:text-base active:scale-95"
             >
               Browse Manhwa
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3 md:gap-4">
             {currentList.map((item) => {
               return (
                 <div
                   key={item.id}
-                  className="group bg-white/5 rounded-2xl overflow-hidden border border-white/5 hover:border-blue-500/30 transition-all hover:-translate-y-1 relative"
+                  className="group bg-white/5 rounded-xl sm:rounded-2xl overflow-hidden border border-white/5 hover:border-blue-500/30 transition-all hover:-translate-y-1 relative active:scale-[0.98]"
                 >
                   {/* Remove Button */}
                   <button

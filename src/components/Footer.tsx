@@ -20,7 +20,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-white/5 mt-6 bg-gradient-to-b from-gray-950 to-black">
+    <footer className="hidden md:block border-t border-white/5 mt-6 bg-gradient-to-b from-gray-950 to-black">
       <div className="max-w-[1600px] mx-auto px-4 py-10 md:py-16">
         {/* Mobile Layout - Stacked and Compact */}
         <div className="md:hidden space-y-8">

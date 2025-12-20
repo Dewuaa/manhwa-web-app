@@ -6,6 +6,9 @@ import AppLayout from '@/components/AppLayout';
 import QueryProvider from '@/providers/QueryProvider';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { CloudSyncProvider } from '@/contexts/CloudSyncContext';
+import { ListsProvider } from '@/contexts/ListsContext';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 import { WebsiteJsonLd, OrganizationJsonLd } from '@/components/JsonLd';
 
 const geistSans = Geist({
@@ -123,10 +126,16 @@ export default function RootLayout({
       >
         <QueryProvider>
           <AuthProvider>
-            <ToastProvider>
-              <AppLayout>{children}</AppLayout>
-              <ScrollToTop />
-            </ToastProvider>
+            <CloudSyncProvider>
+              <ListsProvider>
+                <NotificationProvider>
+                  <ToastProvider>
+                    <AppLayout>{children}</AppLayout>
+                    <ScrollToTop />
+                  </ToastProvider>
+                </NotificationProvider>
+              </ListsProvider>
+            </CloudSyncProvider>
           </AuthProvider>
         </QueryProvider>
       </body>

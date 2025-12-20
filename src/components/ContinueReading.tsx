@@ -37,9 +37,9 @@ export default function ContinueReading() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="snap-center flex-none w-[280px] md:w-[320px] group/card relative"
+              className="snap-center flex-none w-[260px] sm:w-[280px] md:w-[320px] group/card relative"
             >
-              <div className="flex gap-4 bg-gray-900/60 backdrop-blur-sm border border-white/5 rounded-2xl p-3 hover:bg-gray-800/60 transition-colors cursor-pointer h-full relative overflow-hidden">
+              <div className="flex gap-3 sm:gap-4 bg-gray-900/60 backdrop-blur-sm border border-white/5 rounded-xl sm:rounded-2xl p-2.5 sm:p-3 hover:bg-gray-800/60 transition-colors cursor-pointer h-full relative overflow-hidden">
                 {/* Remove button */}
                 <button
                   onClick={(e) => {
@@ -54,9 +54,9 @@ export default function ContinueReading() {
 
                 <Link
                   href={`/manhwa/${encodeURIComponent(item.manhwaId)}/read/${encodeURIComponent(item.lastChapterId)}`}
-                  className="flex gap-4 w-full"
+                  className="flex gap-3 sm:gap-4 w-full"
                 >
-                  <div className="relative w-20 h-28 shrink-0 rounded-lg overflow-hidden shadow-lg group-hover/card:scale-105 transition-transform">
+                  <div className="relative w-16 h-24 sm:w-20 sm:h-28 shrink-0 rounded-lg overflow-hidden shadow-lg group-hover/card:scale-105 transition-transform">
                     {item.manhwaImage ? (
                       <ImageWithFallback
                         src={item.manhwaImage}
@@ -78,10 +78,10 @@ export default function ContinueReading() {
                   </div>
 
                   <div className="flex-1 flex flex-col justify-center min-w-0">
-                    <h3 className="text-white font-bold text-sm truncate group-hover/card:text-blue-400 transition-colors mb-1">
+                    <h3 className="text-white font-semibold sm:font-bold text-xs sm:text-sm truncate group-hover/card:text-blue-400 transition-colors mb-0.5 sm:mb-1">
                       {item.manhwaTitle}
                     </h3>
-                    <p className="text-gray-400 text-xs mb-3 truncate">
+                    <p className="text-gray-400 text-[10px] sm:text-xs mb-2 sm:mb-3 truncate">
                       {item.lastChapterTitle}
                     </p>
 

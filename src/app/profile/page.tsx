@@ -24,8 +24,10 @@ import { useReadingHistory } from '@/hooks/useReadingHistory';
 import { getBookmarks, clearHistory as clearStorageHistory } from '@/lib/storage';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { SyncPanel } from '@/components/SyncStatus';
 import AvatarUpload from '@/components/AvatarUpload';
 import AuthModal from '@/components/AuthModal';
+import { BadgesDisplay } from '@/components/StatsDisplay';
 
 // Reading stats from history
 interface ReadingStats {
@@ -153,7 +155,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-32">
+    <div className="min-h-screen bg-[#0a0a0a] pb-24 overflow-x-hidden">
       {/* Ambient Background */}
       <div className="absolute top-0 inset-x-0 h-64 bg-linear-to-b from-blue-900/20 to-transparent pointer-events-none" />
 
@@ -278,6 +280,11 @@ export default function ProfilePage() {
           </motion.div>
         </div>
 
+        {/* Achievements Section */}
+        <div className="mb-8">
+          <BadgesDisplay />
+        </div>
+
         {/* Quick Links */}
         <div className="grid grid-cols-2 gap-3 mb-8">
           <motion.button
@@ -358,6 +365,11 @@ export default function ProfilePage() {
               <span className="flex-1 font-medium text-sm">Clear History</span>
             </button>
           </div>
+
+          <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest ml-1 mt-6">
+            Cloud Sync
+          </h3>
+          <SyncPanel />
 
           <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest ml-1 mt-6">
             Support

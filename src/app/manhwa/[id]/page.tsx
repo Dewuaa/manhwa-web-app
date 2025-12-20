@@ -23,6 +23,7 @@ import {
   Loader2,
   Calendar,
   MessageSquare,
+  List,
 } from 'lucide-react';
 
 // Lazy load heavy components
@@ -37,10 +38,15 @@ const Comments = dynamic(() => import('@/components/Comments'), {
 import { toggleBookmark, isBookmarked } from '@/lib/storage';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
+import { useCloudSyncContext } from '@/contexts/CloudSyncContext';
+import { useLists } from '@/contexts/ListsContext';
 import { useEngagement } from '@/hooks/useEngagement';
 import { useReadingHistory } from '@/hooks/useReadingHistory';
 import { DetailPageSkeleton } from '@/components/LoadingSkeleton';
 import ImageWithFallback from '@/components/ImageWithFallback';
+import { AddToListModal } from '@/components/AddToListModal';
+import { cleanDescription } from '@/lib/utils';
+import { ShareButton } from '@/components/ShareModal';
 
 // Mock function for Gemini AI (replace with actual service if available)
 const getGeminiRecommendation = async (title: string, description: string) => {
@@ -65,10 +71,16 @@ export default function ManhwaDetailPage() {
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'chapters' | 'comments'>('chapters');
+  const [isListModalOpen, setIsListModalOpen] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isTitleExpanded, setIsTitleExpanded] = useState(false);
 
   const { success } = useToast();
   const { trackView, trackBookmark } = useEngagement();
   const { isChapterRead, getChapterProgress, history } = useReadingHistory();
+  const { toggleBookmark: cloudToggleBookmark, isBookmarked: cloudIsBookmarked } =
+    useCloudSyncContext();
+  const { lists, getManhwaLists } = useLists();
 
   // Force re-render when history changes
   const [, forceUpdate] = useState({});
@@ -122,22 +134,22 @@ export default function ManhwaDetailPage() {
   useEffect(() => {
     if (id) {
       loadManhwaInfo();
-      setBookmarked(isBookmarked(decodeURIComponent(id)));
+      setBookmarked(cloudIsBookmarked(decodeURIComponent(id)));
       trackView(decodeURIComponent(id));
       // Force update to refresh progress display
       forceUpdate({});
     }
-  }, [id, trackView, loadManhwaInfo]);
+  }, [id, trackView, loadManhwaInfo, cloudIsBookmarked]);
 
   // Re-render when history changes
   useEffect(() => {
     forceUpdate({});
   }, [history]);
 
-  const handleBookmarkToggle = () => {
+  const handleBookmarkToggle = async () => {
     if (!manhwa) return;
 
-    const newBookmarked = toggleBookmark({
+    const newBookmarked = await cloudToggleBookmark({
       id: decodeURIComponent(id),
       title: manhwa.title,
       image: manhwa.image,
@@ -232,29 +244,45 @@ export default function ManhwaDetailPage() {
 
       {/* Sticky Header */}
       <div
-        className={`fixed top-0 left-0 right-0 p-4 z-50 flex justify-between items-center transition-all duration-300 ${scrolled ? 'bg-gray-950/90 backdrop-blur-xl border-b border-white/5 shadow-lg' : ''}`}
+        className={`fixed top-0 left-0 right-0 px-3 sm:px-4 py-3 sm:py-4 z-50 flex justify-between items-center transition-all duration-300 ${scrolled ? 'bg-gray-950/90 backdrop-blur-xl border-b border-white/5 shadow-lg' : ''}`}
       >
         <button
           onClick={handleBack}
-          className="p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors border border-white/5"
+          className="p-2 sm:p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors border border-white/5 active:scale-95"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
         </button>
         <h1
-          className={`text-white font-bold text-sm md:text-lg transition-opacity duration-300 ${scrolled ? 'opacity-100' : 'opacity-0'}`}
+          className={`text-white font-bold text-xs sm:text-sm md:text-lg transition-opacity duration-300 max-w-[50%] truncate ${scrolled ? 'opacity-100' : 'opacity-0'}`}
         >
           {manhwa.title}
         </h1>
-        <div className="flex gap-3">
+        <div className="flex gap-2 sm:gap-3">
           <button
             onClick={handleBookmarkToggle}
-            className={`p-2.5 rounded-full transition-colors border border-white/5 ${bookmarked ? 'bg-blue-600 text-white' : 'bg-white/10 backdrop-blur-md text-white hover:bg-white/20'}`}
+            className={`p-2 sm:p-2.5 rounded-full transition-colors border border-white/5 active:scale-95 ${bookmarked ? 'bg-blue-600 text-white' : 'bg-white/10 backdrop-blur-md text-white hover:bg-white/20'}`}
           >
-            <Heart size={20} fill={bookmarked ? 'currentColor' : 'none'} />
+            <Heart
+              className="w-[18px] h-[18px] sm:w-5 sm:h-5"
+              fill={bookmarked ? 'currentColor' : 'none'}
+            />
           </button>
-          <button className="p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors border border-white/5">
-            <Share2 size={20} />
+          <button
+            onClick={() => setIsListModalOpen(true)}
+            className={`p-2 sm:p-2.5 rounded-full transition-colors border border-white/5 active:scale-95 ${
+              getManhwaLists(decodeURIComponent(id)).length > 0
+                ? 'bg-purple-600 text-white'
+                : 'bg-white/10 backdrop-blur-md text-white hover:bg-white/20'
+            }`}
+          >
+            <List size={20} />
           </button>
+          <ShareButton
+            manhwaId={decodeURIComponent(id)}
+            manhwaTitle={manhwa.title}
+            variant="icon"
+            className="p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors border border-white/5"
+          />
         </div>
       </div>
 
@@ -296,13 +324,26 @@ export default function ManhwaDetailPage() {
                 <Bookmark size={18} fill={bookmarked ? 'currentColor' : 'none'} />
                 {bookmarked ? 'In Library' : 'Add to Library'}
               </button>
+              <button
+                onClick={() => setIsListModalOpen(true)}
+                className={`w-full mt-3 h-12 rounded-xl font-bold flex items-center justify-center gap-2 border transition-all ${
+                  getManhwaLists(decodeURIComponent(id)).length > 0
+                    ? 'bg-purple-600 text-white border-purple-500 shadow-[0_0_15px_rgba(147,51,234,0.4)]'
+                    : 'bg-white/5 text-white border-white/10 hover:bg-white/10'
+                }`}
+              >
+                <List size={18} />
+                {getManhwaLists(decodeURIComponent(id)).length > 0
+                  ? `In ${getManhwaLists(decodeURIComponent(id)).length} List${getManhwaLists(decodeURIComponent(id)).length > 1 ? 's' : ''}`
+                  : 'Add to List'}
+              </button>
             </div>
           </div>
 
           {/* Right Column (Mobile & Desktop Content) */}
           <div className="flex flex-col">
             {/* Mobile Header Image (Hidden on Desktop) */}
-            <div className="md:hidden relative h-[45vh] w-full overflow-hidden -mt-20 md:mt-0">
+            <div className="md:hidden relative h-[40vh] sm:h-[45vh] w-full overflow-hidden -mt-16 sm:-mt-20 md:mt-0">
               <div className="absolute inset-0">
                 <ImageWithFallback
                   src={manhwa.image}
@@ -318,12 +359,12 @@ export default function ManhwaDetailPage() {
             </div>
 
             {/* Info Card */}
-            <div className="px-6 -mt-32 md:mt-0 md:px-0">
-              <div className="flex gap-5 items-end md:items-start">
+            <div className="px-4 sm:px-6 -mt-28 sm:-mt-32 md:mt-0 md:px-0">
+              <div className="flex gap-3.5 sm:gap-5 items-end md:items-start">
                 {/* Mobile Thumbnail */}
                 <div className="md:hidden relative group shrink-0">
                   <div className="absolute inset-0 bg-white/20 blur-xl rounded-lg group-hover:bg-blue-500/30 transition-colors" />
-                  <div className="relative w-36 h-52 rounded-xl shadow-2xl border-2 border-white/10 overflow-hidden z-10">
+                  <div className="relative w-28 h-40 sm:w-36 sm:h-52 rounded-lg sm:rounded-xl shadow-2xl border-2 border-white/10 overflow-hidden z-10">
                     <ImageWithFallback
                       src={manhwa.image}
                       alt="Cover"
@@ -359,19 +400,36 @@ export default function ManhwaDetailPage() {
                       </span>
                     )}
                   </div>
-                  <h2 className="text-2xl md:text-5xl font-black text-white leading-tight drop-shadow-xl line-clamp-2 mb-2 md:mb-4">
-                    {manhwa.title}
-                  </h2>
-                  <div className="space-y-1.5">
-                    <p className="text-gray-300 text-sm md:text-lg font-medium flex items-center gap-2 truncate">
-                      <User size={16} className="text-gray-500 flex-shrink-0" />
+                  {/* Title - expandable on mobile */}
+                  <div className="relative">
+                    <h2
+                      onClick={() => setIsTitleExpanded(!isTitleExpanded)}
+                      className={`text-xl sm:text-2xl md:text-5xl font-black text-white leading-tight drop-shadow-xl mb-1.5 sm:mb-2 md:mb-4 cursor-pointer md:cursor-default ${
+                        isTitleExpanded ? '' : 'line-clamp-2 md:line-clamp-none'
+                      }`}
+                    >
+                      {manhwa.title}
+                    </h2>
+                    {/* Show tap hint only on mobile if title is long */}
+                    {manhwa.title.length > 40 && (
+                      <button
+                        onClick={() => setIsTitleExpanded(!isTitleExpanded)}
+                        className="md:hidden text-blue-400 text-xs font-medium -mt-1 mb-2"
+                      >
+                        {isTitleExpanded ? 'Show less' : 'Tap to see full title'}
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-1 sm:space-y-1.5">
+                    <p className="text-gray-300 text-xs sm:text-sm md:text-lg font-medium flex items-center gap-1.5 sm:gap-2 truncate">
+                      <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0" />
                       <span className="truncate">
                         {manhwa.authors?.join(', ') || 'Unknown Author'}
                       </span>
                     </p>
                     {manhwa.releaseDate && (
-                      <p className="text-gray-400 text-xs md:text-base font-medium flex items-center gap-2">
-                        <Calendar size={14} className="text-gray-500 flex-shrink-0" />
+                      <p className="text-gray-400 text-[11px] sm:text-xs md:text-base font-medium flex items-center gap-1.5 sm:gap-2">
+                        <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-500 flex-shrink-0" />
                         <span>Released {manhwa.releaseDate}</span>
                       </p>
                     )}
@@ -380,20 +438,23 @@ export default function ManhwaDetailPage() {
               </div>
 
               {/* Stats Row */}
-              <div className="grid grid-cols-3 gap-4 mt-8 bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/5 md:bg-white/[0.03] md:p-6">
+              <div className="grid grid-cols-3 gap-2.5 sm:gap-4 mt-5 sm:mt-8 bg-white/5 backdrop-blur-md rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5 md:bg-white/[0.03] md:p-6">
                 <div className="text-center group">
-                  <div className="flex items-center justify-center gap-1.5 text-yellow-400 mb-1 group-hover:scale-110 transition-transform">
-                    <span className="font-black text-lg md:text-2xl">
+                  <div className="flex items-center justify-center gap-1 sm:gap-1.5 text-yellow-400 mb-0.5 sm:mb-1 group-hover:scale-110 transition-transform">
+                    <span className="font-black text-base sm:text-lg md:text-2xl">
                       {manhwa.rating || 'N/A'}
                     </span>
-                    <Star size={14} fill="currentColor" className="md:w-5 md:h-5" />
+                    <Star
+                      className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-5 md:h-5"
+                      fill="currentColor"
+                    />
                   </div>
-                  <p className="text-[10px] md:text-xs uppercase tracking-wider text-gray-500 font-bold">
+                  <p className="text-[9px] sm:text-[10px] md:text-xs uppercase tracking-wider text-gray-500 font-bold">
                     {manhwa.ratingCount ? `(${manhwa.ratingCount})` : 'Rating'}
                   </p>
                 </div>
                 <div className="text-center border-l border-white/10 group">
-                  <div className="text-white font-black text-lg md:text-2xl mb-1 group-hover:text-blue-400 transition-colors">
+                  <div className="text-white font-black text-base sm:text-lg md:text-2xl mb-0.5 sm:mb-1 group-hover:text-blue-400 transition-colors">
                     {manhwa.viewsFormatted ||
                       (manhwa.views
                         ? typeof manhwa.views === 'number'
@@ -405,24 +466,24 @@ export default function ManhwaDetailPage() {
                           : manhwa.views
                         : 'N/A')}
                   </div>
-                  <p className="text-[10px] md:text-xs uppercase tracking-wider text-gray-500 font-bold">
+                  <p className="text-[9px] sm:text-[10px] md:text-xs uppercase tracking-wider text-gray-500 font-bold">
                     Views
                   </p>
                 </div>
                 <div className="text-center border-l border-white/10 group">
-                  <div className="text-green-400 font-black text-lg md:text-2xl mb-1 group-hover:text-green-300 transition-colors">
+                  <div className="text-green-400 font-black text-base sm:text-lg md:text-2xl mb-0.5 sm:mb-1 group-hover:text-green-300 transition-colors">
                     {manhwa.totalChapters || manhwa.chapters?.length || 0}
                   </div>
-                  <p className="text-[10px] md:text-xs uppercase tracking-wider text-gray-500 font-bold">
+                  <p className="text-[9px] sm:text-[10px] md:text-xs uppercase tracking-wider text-gray-500 font-bold">
                     Chapters
                   </p>
                 </div>
               </div>
 
               {/* Status & Last Update Row */}
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className="mt-3 sm:mt-4 flex flex-wrap gap-2 sm:gap-3">
                 <span
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 ${
+                  className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 ${
                     manhwa.status?.toLowerCase() === 'ongoing'
                       ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                       : manhwa.status?.toLowerCase() === 'completed'
@@ -430,12 +491,12 @@ export default function ManhwaDetailPage() {
                         : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                   }`}
                 >
-                  <BookOpen size={12} />
+                  <BookOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   {manhwa.status || 'Unknown'}
                 </span>
                 {manhwa.lastUpdate && (
-                  <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white/5 text-gray-400 border border-white/10 flex items-center gap-1.5">
-                    <Calendar size={12} />
+                  <span className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold bg-white/5 text-gray-400 border border-white/10 flex items-center gap-1 sm:gap-1.5">
+                    <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     Updated {manhwa.lastUpdate}
                   </span>
                 )}
@@ -496,9 +557,29 @@ export default function ManhwaDetailPage() {
                   Synopsis
                   <Info size={14} className="text-gray-500" />
                 </h3>
-                <p className="text-gray-400 text-sm md:text-base leading-7 md:leading-8">
-                  {manhwa.description}
-                </p>
+                <div className="relative">
+                  <p
+                    className={`text-gray-400 text-sm md:text-base leading-7 md:leading-8 ${
+                      isDescriptionExpanded ? '' : 'line-clamp-4 md:line-clamp-none'
+                    }`}
+                  >
+                    {cleanDescription(manhwa.description)}
+                  </p>
+                  {/* Show "See more" only on mobile if description is long */}
+                  {cleanDescription(manhwa.description).length > 200 && (
+                    <button
+                      onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                      className="md:hidden mt-2 text-blue-400 text-sm font-semibold flex items-center gap-1 hover:text-blue-300 transition-colors"
+                    >
+                      {isDescriptionExpanded ? <>Show less</> : <>See more...</>}
+                    </button>
+                  )}
+                  {/* Gradient fade overlay when collapsed on mobile */}
+                  {!isDescriptionExpanded &&
+                    cleanDescription(manhwa.description).length > 200 && (
+                      <div className="md:hidden absolute bottom-6 left-0 right-0 h-8 bg-gradient-to-t from-gray-950 to-transparent pointer-events-none" />
+                    )}
+                </div>
               </div>
 
               {/* Mobile Floating Action Buttons */}
@@ -704,6 +785,17 @@ export default function ManhwaDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Add to List Modal */}
+      <AddToListModal
+        isOpen={isListModalOpen}
+        onClose={() => setIsListModalOpen(false)}
+        manhwa={{
+          id: decodeURIComponent(id),
+          title: manhwa.title,
+          image: manhwa.image,
+        }}
+      />
     </div>
   );
 }
