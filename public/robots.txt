@@ -1,0 +1,16 @@
+# Robots.txt for Inkora - inkora.spacely.tech
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /auth/callback
+Disallow: /profile
+Disallow: /bookmarks
+Disallow: /history
+
+# Sitemap location
+Sitemap: https://inkora.spacely.tech/sitemap.xml
+
+# Crawl-delay (optional, be nice to the server)
+Crawl-delay: 1

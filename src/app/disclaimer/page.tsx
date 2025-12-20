@@ -1,7 +1,20 @@
-'use client';
-
+import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, AlertTriangle, ExternalLink } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Disclaimer',
+  description:
+    'Disclaimer for Inkora - Important notice about our manga and manhwa reader service and content sources.',
+  openGraph: {
+    title: 'Disclaimer - Inkora',
+    description: 'Important notice about our manga and manhwa reader service.',
+    url: 'https://inkora.spacely.tech/disclaimer',
+  },
+  alternates: {
+    canonical: 'https://inkora.spacely.tech/disclaimer',
+  },
+};
 
 export default function DisclaimerPage() {
   return (

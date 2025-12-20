@@ -1,7 +1,20 @@
-'use client';
-
+import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Shield, Database, Cookie, Eye, Lock, Mail } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description:
+    'Privacy Policy for Inkora - Learn how we protect your data and respect your privacy when using our manga and manhwa reader.',
+  openGraph: {
+    title: 'Privacy Policy - Inkora',
+    description: 'Learn how we protect your data and respect your privacy.',
+    url: 'https://inkora.spacely.tech/privacy',
+  },
+  alternates: {
+    canonical: 'https://inkora.spacely.tech/privacy',
+  },
+};
 
 export default function PrivacyPage() {
   return (

@@ -1,35 +1,21 @@
-'use client';
+import { Metadata } from 'next';
+import GenresPageClient from './GenresPageClient';
 
-import { useState, useEffect } from 'react';
-import { manhwaAPI } from '@/lib/api';
-import { Manhwa } from '@/lib/types';
-import { Discover } from '@/components/zenith/Discover';
-import { AtmosphericBackground } from '@/components/zenith/AtmosphericBackground';
+export const metadata: Metadata = {
+  title: 'Browse All Genres - Manga & Manhwa Categories',
+  description:
+    'Browse manga and manhwa by genre. Find action, romance, fantasy, comedy, horror, mystery, and more. Discover your next favorite series on Inkora.',
+  openGraph: {
+    title: 'Browse All Genres - Inkora',
+    description:
+      'Browse manga and manhwa by genre. Find action, romance, fantasy, comedy, and more.',
+    url: 'https://inkora.spacely.tech/genres',
+  },
+  alternates: {
+    canonical: 'https://inkora.spacely.tech/genres',
+  },
+};
 
 export default function GenresPage() {
-  const [topManhwa, setTopManhwa] = useState<Manhwa[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        // Fetch latest/trending manhwa for the top 10 list
-        const result = await manhwaAPI.getLatestManhwa(1);
-        setTopManhwa(result?.results || []);
-      } catch (error) {
-        console.error('Failed to load discover data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
-
-  return (
-    <>
-      <AtmosphericBackground />
-      <Discover topManhwa={topManhwa} loading={loading} />
-    </>
-  );
+  return <GenresPageClient />;
 }

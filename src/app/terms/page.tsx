@@ -1,7 +1,20 @@
-'use client';
-
+import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, FileText, CheckCircle, XCircle } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description:
+    'Terms of Service for Inkora - Read our terms and conditions for using our manga and manhwa reader platform.',
+  openGraph: {
+    title: 'Terms of Service - Inkora',
+    description: 'Read our terms and conditions for using Inkora.',
+    url: 'https://inkora.spacely.tech/terms',
+  },
+  alternates: {
+    canonical: 'https://inkora.spacely.tech/terms',
+  },
+};
 
 export default function TermsPage() {
   return (

@@ -6,8 +6,17 @@ import SearchPageClient from '@/components/SearchPageClient';
 import { SearchResult } from '@/lib/types';
 
 export const metadata: Metadata = {
-  title: 'Discover - Manhwa Reader',
-  description: 'Search and discover your favorite manhwa.',
+  title: 'Search Manga & Manhwa - Discover New Series',
+  description:
+    'Search and discover thousands of manga and manhwa series. Find action, romance, fantasy, and more genres. Updated daily with the latest chapters.',
+  openGraph: {
+    title: 'Search Manga & Manhwa - Inkora',
+    description: 'Search and discover thousands of manga and manhwa series.',
+    url: 'https://inkora.spacely.tech/search',
+  },
+  alternates: {
+    canonical: 'https://inkora.spacely.tech/search',
+  },
 };
 
 interface SearchPageProps {

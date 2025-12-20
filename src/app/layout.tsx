@@ -6,6 +6,7 @@ import AppLayout from '@/components/AppLayout';
 import QueryProvider from '@/providers/QueryProvider';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { WebsiteJsonLd, OrganizationJsonLd } from '@/components/JsonLd';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -18,13 +19,34 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('http://localhost:3000'), // Replace with actual domain in production
+  metadataBase: new URL('https://inkora.spacely.tech'),
   title: {
-    default: 'Inkora - Read Manga & Manhwa Online',
+    default: 'Inkora - Read Manga & Manhwa Online Free',
     template: '%s | Inkora',
   },
   description:
-    'Your ultimate destination for reading manga and manhwa online. Discover thousands of titles with Inkora.',
+    'Read manga and manhwa online for free on Inkora. Discover thousands of titles including action, romance, fantasy, and more. Updated daily with the latest chapters.',
+  keywords: [
+    'manga',
+    'manhwa',
+    'webtoon',
+    'read manga online',
+    'read manhwa online',
+    'free manga',
+    'manga reader',
+    'manhwa reader',
+    'korean manga',
+    'action manga',
+    'romance manhwa',
+    'fantasy webtoon',
+    'isekai manga',
+    'manga online free',
+    'manhwa online free',
+    'webtoon free',
+  ],
+  authors: [{ name: 'Inkora' }],
+  creator: 'Inkora',
+  publisher: 'Inkora',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -34,21 +56,44 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: '/',
+    url: 'https://inkora.spacely.tech',
     siteName: 'Inkora',
+    title: 'Inkora - Read Manga & Manhwa Online Free',
+    description:
+      'Read manga and manhwa online for free. Discover thousands of titles updated daily.',
     images: [
       {
-        url: '/og-image.jpg', // You might want to add a default OG image to public/
+        url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Inkora - Manga & Manhwa Reader',
+        alt: 'Inkora - Read Manga & Manhwa Online',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Inkora',
-    description: 'Your ultimate destination for reading manga and manhwa online',
+    title: 'Inkora - Read Manga & Manhwa Online Free',
+    description:
+      'Read manga and manhwa online for free. Discover thousands of titles updated daily.',
+    images: ['/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    // Add your Google Search Console verification code here after setting it up
+    // google: 'your-google-verification-code',
+  },
+  alternates: {
+    canonical: 'https://inkora.spacely.tech',
   },
 };
 
@@ -67,6 +112,8 @@ export default function RootLayout({
         <meta name="theme-color" content="#9333ea" />
         <link rel="icon" href="/icon-192.png" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
+        <WebsiteJsonLd />
+        <OrganizationJsonLd />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground selection:bg-primary/30 selection:text-white pb-20 md:pb-0 overflow-x-hidden`}
