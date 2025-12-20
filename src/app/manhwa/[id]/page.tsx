@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useTransition } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { manhwaAPI } from '@/lib/api';
 import { ManhwaInfo, Provider } from '@/lib/types';
 import {
@@ -23,6 +24,16 @@ import {
   Calendar,
   MessageSquare,
 } from 'lucide-react';
+
+// Lazy load heavy components
+const Comments = dynamic(() => import('@/components/Comments'), {
+  loading: () => (
+    <div className="flex items-center justify-center py-12">
+      <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  ),
+  ssr: false,
+});
 import { toggleBookmark, isBookmarked } from '@/lib/storage';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
@@ -30,7 +41,6 @@ import { useEngagement } from '@/hooks/useEngagement';
 import { useReadingHistory } from '@/hooks/useReadingHistory';
 import { DetailPageSkeleton } from '@/components/LoadingSkeleton';
 import ImageWithFallback from '@/components/ImageWithFallback';
-import Comments from '@/components/Comments';
 
 // Mock function for Gemini AI (replace with actual service if available)
 const getGeminiRecommendation = async (title: string, description: string) => {
@@ -74,49 +84,33 @@ export default function ManhwaDetailPage() {
     try {
       setLoading(true);
       setError(null);
-      // Use unified provider with automatic fallback
       manhwaAPI.setProvider(Provider.MGEKO);
 
-      // 1. Fetch from unified provider (tries manhuaplus first, falls back to manhuaus)
+      // Fetch manhwa info (cached by API layer)
       const info = await manhwaAPI.getManhwaInfo(decodeURIComponent(id));
-      console.log('📚 Manhwa Info:', info);
-      console.log('🔌 Provider used:', info.provider);
-      console.log('🔄 Fallback used:', info._fallback ? 'Yes' : 'No');
-      console.log('🏷️ Genres:', info.genres);
-      console.log('✍️ Authors:', info.authors);
-      console.log('📅 Release Date:', info.releaseDate);
-
-      // 2. Enrich metadata from AniList if missing
-      const needsEnrichment =
-        !info.genres?.length || !info.authors?.length || !info.releaseDate;
-
-      if (needsEnrichment) {
-        console.log('🔍 Metadata incomplete, enriching from AniList...');
-        const enrichment = await manhwaAPI.enrichMetadata(info.title);
-
-        if (enrichment) {
-          // Only fill in missing data, don't overwrite existing
-          if (!info.genres?.length && enrichment.genres?.length) {
-            info.genres = enrichment.genres;
-            console.log('✅ Added genres:', enrichment.genres);
-          }
-          if (!info.authors?.length && enrichment.authors?.length) {
-            info.authors = enrichment.authors;
-            console.log('✅ Added authors:', enrichment.authors);
-          }
-          if (!info.releaseDate && enrichment.releaseDate) {
-            info.releaseDate = enrichment.releaseDate;
-            console.log('✅ Added release date:', enrichment.releaseDate);
-          }
-          if (!info.description && enrichment.description) {
-            info.description = enrichment.description;
-            console.log('✅ Enhanced description');
-          }
-        }
-      }
 
       setManhwa(info);
-      document.title = `${info.title} | Manhwa Reader`;
+      document.title = `${info.title} | Inkora`;
+
+      // Enrich metadata in background (non-blocking)
+      if (!info.genres?.length || !info.authors?.length) {
+        manhwaAPI
+          .enrichMetadata(info.title)
+          .then((enrichment) => {
+            if (enrichment) {
+              setManhwa((prev) => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  genres: prev.genres?.length ? prev.genres : enrichment.genres,
+                  authors: prev.authors?.length ? prev.authors : enrichment.authors,
+                  releaseDate: prev.releaseDate || enrichment.releaseDate,
+                };
+              });
+            }
+          })
+          .catch(() => {}); // Silently fail enrichment
+      }
     } catch (err) {
       setError('Failed to load manhwa details');
       console.error(err);
@@ -276,6 +270,7 @@ export default function ManhwaDetailPage() {
                   alt="Cover"
                   fill
                   sizes="300px"
+                  priority
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -314,6 +309,7 @@ export default function ManhwaDetailPage() {
                   alt="Cover"
                   fill
                   sizes="100vw"
+                  priority
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent" />

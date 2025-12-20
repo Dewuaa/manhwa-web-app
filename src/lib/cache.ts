@@ -26,16 +26,16 @@ class Cache {
 
   get<T>(key: string): T | null {
     const entry = this.cache.get(key);
-    
+
     if (!entry) return null;
-    
+
     const age = Date.now() - entry.timestamp;
-    
+
     if (age > entry.ttl) {
       this.cache.delete(key);
       return null;
     }
-    
+
     return entry.data as T;
   }
 
@@ -53,7 +53,7 @@ class Cache {
 
   private cleanup(): void {
     const now = Date.now();
-    
+
     for (const [key, entry] of this.cache.entries()) {
       const age = now - entry.timestamp;
       if (age > entry.ttl) {
@@ -74,10 +74,11 @@ class Cache {
 // Export singleton instance
 export const apiCache = new Cache();
 
-// Cache TTL constants
+// Cache TTL constants (increased for better performance)
 export const CACHE_TTL = {
-  SHORT: 2 * 60 * 1000,      // 2 minutes
-  MEDIUM: 5 * 60 * 1000,     // 5 minutes (default)
-  LONG: 30 * 60 * 1000,      // 30 minutes
-  HOUR: 60 * 60 * 1000,      // 1 hour
+  SHORT: 2 * 60 * 1000, // 2 minutes - search results
+  MEDIUM: 10 * 60 * 1000, // 10 minutes - trending/popular
+  LONG: 60 * 60 * 1000, // 1 hour - manhwa info (rarely changes)
+  HOUR: 60 * 60 * 1000, // 1 hour
+  DAY: 24 * 60 * 60 * 1000, // 24 hours - static data like genres
 };

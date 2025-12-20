@@ -1,7 +1,7 @@
 'use client';
 
 import Image, { ImageProps } from 'next/image';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { BookOpen } from 'lucide-react';
 import { getProxiedImageUrl } from '@/lib/api';
 
@@ -13,13 +13,14 @@ interface ImageWithFallbackProps extends Omit<ImageProps, 'onError'> {
   showIcon?: boolean;
 }
 
-export default function ImageWithFallback({
+function ImageWithFallbackComponent({
   src,
   alt,
   fallbackSrc,
   showIcon = true,
   className = '',
   fill,
+  priority,
   ...props
 }: ImageWithFallbackProps) {
   const [error, setError] = useState(false);
@@ -90,16 +91,23 @@ export default function ImageWithFallback({
 
   return (
     <>
-      {loading && <div className="absolute inset-0 bg-gray-800 animate-pulse" />}
+      {loading && !priority && (
+        <div className="absolute inset-0 bg-gray-800 animate-pulse" />
+      )}
       <Image
         {...props}
         fill={fill}
         src={processedSrc}
         alt={alt}
-        className={`${className} ${loading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        priority={priority}
+        className={`${className} ${loading && !priority ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
         onError={() => setError(true)}
         onLoad={() => setLoading(false)}
       />
     </>
   );
 }
+
+// Memoize to prevent unnecessary re-renders
+const ImageWithFallback = memo(ImageWithFallbackComponent);
+export default ImageWithFallback;
