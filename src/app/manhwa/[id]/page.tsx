@@ -514,7 +514,7 @@ export default function ManhwaDetailPage() {
                       <Sparkles size={16} className="text-white" />
                     </div>
                     <span className="text-indigo-200 font-bold text-sm tracking-wide">
-                      Gemini AI Insight
+                      Inkora AI Insight
                     </span>
                   </div>
 
