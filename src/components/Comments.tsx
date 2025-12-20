@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo, useCallback } from 'react';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
-import { Heart, MessageCircle, Trash2, Send, LogIn } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, Send, LogIn, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useComments } from '@/hooks/useComments';
@@ -24,17 +24,23 @@ export default function Comments({
   onClose,
 }: CommentsProps) {
   const { user, profile, isConfigured } = useAuth();
-  const { comments, loading, error, addComment, deleteComment, toggleLike } = useComments(
-    {
+  const { comments, loading, error, addComment, deleteComment, toggleLike, refetch } =
+    useComments({
       manhwaId,
       chapterId,
-    },
-  );
+    });
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
 
   const handleSubmitComment = async () => {
     if (!newComment.trim()) return;
@@ -220,14 +226,24 @@ export default function Comments({
             <span className="text-sm font-normal text-gray-400">({comments.length})</span>
           )}
         </h3>
-        {onClose && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            onClick={handleRefresh}
+            disabled={refreshing || loading}
+            className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 disabled:opacity-50"
+            title="Refresh comments"
           >
-            ✕
+            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
           </button>
-        )}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Not Configured Message */}
@@ -297,13 +313,29 @@ export default function Comments({
           {/* Comments List */}
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              // Skeleton loading
+              <div className="space-y-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex gap-3 animate-pulse">
+                    <div className="w-10 h-10 rounded-full bg-white/10" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-24 bg-white/10 rounded" />
+                      <div className="h-3 w-full bg-white/5 rounded" />
+                      <div className="h-3 w-3/4 bg-white/5 rounded" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : error ? (
               <div className="text-center py-12">
                 <MessageCircle size={48} className="mx-auto text-red-500/50 mb-3" />
-                <p className="text-red-400 text-sm">{error}</p>
+                <p className="text-red-400 text-sm mb-3">{error}</p>
+                <button
+                  onClick={handleRefresh}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg transition-colors"
+                >
+                  Try Again
+                </button>
               </div>
             ) : comments.length === 0 ? (
               <div className="text-center py-12">
