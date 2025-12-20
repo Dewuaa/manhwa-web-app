@@ -73,7 +73,10 @@ export default function ProfilePage() {
   useEffect(() => {
     const bookmarks = getBookmarks();
     const uniqueManhwa = new Set(history.map((h) => h.manhwaId));
-    const completedChapters = history.reduce((acc, h) => acc + h.chaptersRead.length, 0);
+    const completedChapters = history.reduce(
+      (acc, h) => acc + (h.chaptersRead?.length || 0),
+      0,
+    );
 
     // Calculate streak (simplified - days with reading activity)
     const today = new Date();

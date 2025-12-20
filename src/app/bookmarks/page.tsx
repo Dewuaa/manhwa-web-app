@@ -59,7 +59,7 @@ export default function BookmarksPage() {
     const historyItem = history.find((h) => h.manhwaId === manhwaId);
     if (!historyItem) return null;
 
-    const chaptersRead = historyItem.chaptersRead.length;
+    const chaptersRead = historyItem.chaptersRead?.length || 0;
     const totalChapters = historyItem.totalChapters || chaptersRead;
     const percentage =
       totalChapters > 0 ? Math.round((chaptersRead / totalChapters) * 100) : 0;
