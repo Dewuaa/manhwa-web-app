@@ -453,7 +453,14 @@ export default function ChapterReaderPage({ params }: PageProps) {
         decodedChapterId,
         sourceProvider,
       );
-      setPages(chapterPages);
+
+      // Filter out mgeko promotional images only
+      const filteredPages = chapterPages.filter((page) => {
+        const imgUrl = page.img.toLowerCase();
+        return !imgUrl.includes('mgeko');
+      });
+
+      setPages(filteredPages);
     } catch (err) {
       setError('Failed to load chapter');
       console.error(err);
@@ -717,6 +724,21 @@ export default function ChapterReaderPage({ params }: PageProps) {
 
             {/* Next Chapter Button at bottom */}
             <div className="p-12 flex flex-col items-center gap-6 bg-gray-950 text-white border-t border-white/5">
+              {/* Inkora Banner */}
+              <div className="w-full max-w-md bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20 rounded-2xl p-6 border border-white/10 mb-4">
+                <div className="text-center">
+                  <h3 className="text-2xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+                    Inkora
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-3">Your Premium Manhwa Reader</p>
+                  <div className="flex justify-center gap-4 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">⚡ Fast Updates</span>
+                    <span className="flex items-center gap-1">📚 Huge Library</span>
+                    <span className="flex items-center gap-1">💜 Ad-Free</span>
+                  </div>
+                </div>
+              </div>
+
               <p className="text-gray-500 text-sm font-medium">
                 You&apos;ve reached the end of the chapter
               </p>
