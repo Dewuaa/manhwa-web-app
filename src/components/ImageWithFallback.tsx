@@ -49,6 +49,7 @@ function ImageWithFallbackComponent({
           fill={fill}
           src={fallbackSrc}
           alt={alt}
+          unoptimized
           className={className}
           onError={() => setError(true)}
         />
@@ -100,6 +101,7 @@ function ImageWithFallbackComponent({
         src={processedSrc}
         alt={alt}
         priority={priority}
+        unoptimized
         className={`${className} ${loading && !priority ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
         onError={() => setError(true)}
         onLoad={() => setLoading(false)}
