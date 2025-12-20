@@ -24,19 +24,27 @@ export function useComments({ manhwaId, chapterId }: UseCommentsOptions) {
   const { user, isConfigured } = useAuth();
   const supabase = getSupabaseClient();
   const isMounted = useRef(true);
-  const fetchingRef = useRef(false);
+  const fetchIdRef = useRef(0); // Track fetch requests to handle race conditions
+  const hasFetchedRef = useRef(false); // Track if we've attempted a fetch
 
   const cacheKey = useMemo(
     () => `${manhwaId}-${chapterId || 'main'}`,
     [manhwaId, chapterId],
   );
 
-  // Check cache on mount
+  // Store user ID in ref to avoid dependency changes
+  const userIdRef = useRef(user?.id);
+  useEffect(() => {
+    userIdRef.current = user?.id;
+  }, [user?.id]);
+
+  // Check cache on mount and set loading state immediately
   useEffect(() => {
     const cached = commentsCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
       setComments(cached.data);
       setLoading(false);
+      hasFetchedRef.current = true;
     }
   }, [cacheKey]);
 
@@ -57,8 +65,9 @@ export function useComments({ manhwaId, chapterId }: UseCommentsOptions) {
 
   const fetchComments = useCallback(
     async (force = false) => {
-      // Prevent concurrent fetches
-      if (fetchingRef.current) return;
+      // Increment fetch ID to track this specific request
+      const currentFetchId = ++fetchIdRef.current;
+      hasFetchedRef.current = true;
 
       // Check cache first (unless forced)
       if (!force) {
@@ -73,20 +82,24 @@ export function useComments({ manhwaId, chapterId }: UseCommentsOptions) {
       }
 
       if (!supabase) {
+        console.log('useComments: supabase client is null');
         if (isMounted.current) {
           setLoading(false);
-          setError('Comments are not available');
+          // Don't show error if just not configured - it's expected
+          if (isConfigured) {
+            setError('Comments are not available');
+          }
         }
         return;
       }
 
-      fetchingRef.current = true;
       if (isMounted.current) {
         setLoading(true);
         setError(null);
       }
 
       try {
+        console.log('useComments: Fetching comments for', manhwaId);
         // Single optimized query to get all comments with their profiles
         let query = supabase
           .from('comments')
@@ -111,40 +124,57 @@ export function useComments({ manhwaId, chapterId }: UseCommentsOptions) {
           query = query.is('chapter_id', null);
         }
 
+        // Execute query
         const { data: allComments, error: commentsError } = await query;
+
+        console.log(
+          'useComments: Query complete, comments:',
+          allComments?.length ?? 0,
+          'error:',
+          commentsError,
+        );
+
+        // Check if this fetch is still the latest one (handles race conditions)
+        if (currentFetchId !== fetchIdRef.current || !isMounted.current) {
+          console.log('useComments: Fetch cancelled (stale)');
+          return;
+        }
 
         if (commentsError) throw commentsError;
 
         if (!allComments || allComments.length === 0) {
-          if (isMounted.current) {
-            setComments([]);
-            commentsCache.set(cacheKey, { data: [], timestamp: Date.now() });
-            setLoading(false);
-          }
-          fetchingRef.current = false;
+          setComments([]);
+          commentsCache.set(cacheKey, { data: [], timestamp: Date.now() });
+          setLoading(false);
           return;
         }
 
         // Get all comment IDs for batch like check
         const commentIds = allComments.map((c) => c.id);
 
-        // Batch fetch user likes if logged in
+        // Batch fetch user likes if logged in (use ref to avoid dependency)
         let userLikes = new Set<string>();
-        if (user && commentIds.length > 0) {
+        const currentUserId = userIdRef.current;
+        if (currentUserId && commentIds.length > 0) {
           try {
             const { data: likesData } = await supabase
               .from('comment_likes')
               .select('comment_id')
-              .eq('user_id', user.id)
+              .eq('user_id', currentUserId)
               .in('comment_id', commentIds);
 
             if (likesData) {
               userLikes = new Set(likesData.map((l) => l.comment_id));
             }
           } catch (e) {
-            // Silently handle like fetch errors
+            // Silently handle like fetch errors - comments still work
             console.log('Error batch fetching likes:', e);
           }
+        }
+
+        // Check again if this fetch is still relevant
+        if (currentFetchId !== fetchIdRef.current || !isMounted.current) {
+          return;
         }
 
         // Organize comments into parent/child structure efficiently
@@ -175,32 +205,50 @@ export function useComments({ manhwaId, chapterId }: UseCommentsOptions) {
           ),
         }));
 
-        if (isMounted.current) {
-          setComments(commentsWithReplies);
-          commentsCache.set(cacheKey, {
-            data: commentsWithReplies,
-            timestamp: Date.now(),
-          });
-        }
+        setComments(commentsWithReplies);
+        commentsCache.set(cacheKey, {
+          data: commentsWithReplies,
+          timestamp: Date.now(),
+        });
       } catch (err) {
         console.error('Error in fetchComments:', err);
-        if (isMounted.current) {
+        if (isMounted.current && currentFetchId === fetchIdRef.current) {
           setError(err instanceof Error ? err.message : 'Failed to load comments');
         }
       } finally {
-        if (isMounted.current) {
+        if (isMounted.current && currentFetchId === fetchIdRef.current) {
           setLoading(false);
         }
-        fetchingRef.current = false;
       }
     },
-    [manhwaId, chapterId, supabase, user, cacheKey],
+    [manhwaId, chapterId, supabase, cacheKey, isConfigured],
   );
 
-  // Fetch on mount
+  // Fetch on mount - with safety timeout
   useEffect(() => {
-    fetchComments();
+    const safetyTimeout = setTimeout(() => {
+      if (isMounted.current) {
+        console.warn(
+          'Comments: Safety timeout triggered - forcing loading state to false',
+        );
+        setLoading(false);
+        setError('Loading timed out. Please try refreshing.');
+      }
+    }, 15000); // 15 second safety net
+
+    fetchComments().finally(() => {
+      clearTimeout(safetyTimeout);
+    });
+
+    return () => clearTimeout(safetyTimeout);
   }, [fetchComments]);
+
+  // Additional safety: if supabase becomes available after initial mount, retry
+  useEffect(() => {
+    if (supabase && isConfigured && !hasFetchedRef.current) {
+      fetchComments();
+    }
+  }, [supabase, isConfigured, fetchComments]);
 
   const addComment = async (content: string, parentId?: string) => {
     if (!supabase) {

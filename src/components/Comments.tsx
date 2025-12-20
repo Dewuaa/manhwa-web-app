@@ -1,9 +1,17 @@
 'use client';
 
-import { useState, memo, useCallback } from 'react';
+import { useState, memo, useCallback, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
-import { Heart, MessageCircle, Trash2, Send, LogIn, RefreshCw } from 'lucide-react';
+import {
+  Heart,
+  MessageCircle,
+  Trash2,
+  Send,
+  LogIn,
+  RefreshCw,
+  AlertCircle,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useComments } from '@/hooks/useComments';
@@ -35,9 +43,34 @@ export default function Comments({
   const [submitting, setSubmitting] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [loadingTooLong, setLoadingTooLong] = useState(false);
+
+  // Detect if loading is taking too long (more than 8 seconds)
+  useEffect(() => {
+    if (loading) {
+      loadingTimeoutRef.current = setTimeout(() => {
+        setLoadingTooLong(true);
+      }, 8000);
+    } else {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      setLoadingTooLong(false);
+    }
+
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, [loading]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
+    setLoadingTooLong(false);
+    setRetryCount((prev) => prev + 1);
     await refetch();
     setRefreshing(false);
   }, [refetch]);
@@ -313,8 +346,22 @@ export default function Comments({
           {/* Comments List */}
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {loading ? (
-              // Skeleton loading
+              // Skeleton loading with timeout feedback
               <div className="space-y-6">
+                {loadingTooLong && (
+                  <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg mb-4">
+                    <AlertCircle size={16} className="text-yellow-500 shrink-0" />
+                    <p className="text-yellow-400 text-xs">
+                      Loading is taking longer than expected.{' '}
+                      <button
+                        onClick={handleRefresh}
+                        className="underline hover:no-underline"
+                      >
+                        Try refreshing
+                      </button>
+                    </p>
+                  </div>
+                )}
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex gap-3 animate-pulse">
                     <div className="w-10 h-10 rounded-full bg-white/10" />
@@ -334,8 +381,13 @@ export default function Comments({
                   onClick={handleRefresh}
                   className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg transition-colors"
                 >
-                  Try Again
+                  {retryCount > 2 ? 'Try Again Later' : 'Try Again'}
                 </button>
+                {retryCount > 2 && (
+                  <p className="text-gray-500 text-xs mt-2">
+                    If the issue persists, the server may be temporarily unavailable.
+                  </p>
+                )}
               </div>
             ) : comments.length === 0 ? (
               <div className="text-center py-12">
