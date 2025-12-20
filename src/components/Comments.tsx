@@ -231,7 +231,7 @@ export default function Comments({
       </div>
 
       {/* Not Configured Message */}
-      {!isConfigured && (
+      {!isConfigured ? (
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center">
             <MessageCircle size={48} className="mx-auto text-gray-600 mb-3" />
@@ -239,9 +239,7 @@ export default function Comments({
             <p className="text-gray-600 text-sm">This feature requires backend setup.</p>
           </div>
         </div>
-      )}
-
-      {isConfigured && (
+      ) : (
         <>
           {/* Comment Input */}
           <div className="p-4 border-b border-white/10">

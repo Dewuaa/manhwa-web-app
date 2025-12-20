@@ -19,6 +19,13 @@ export function useComments({ manhwaId, chapterId }: UseCommentsOptions) {
   const hasFetched = useRef(false);
   const lastFetchKey = useRef('');
 
+  // Set loading to false immediately if not configured
+  useEffect(() => {
+    if (!isConfigured || !supabase) {
+      setLoading(false);
+    }
+  }, [isConfigured, supabase]);
+
   const fetchComments = useCallback(
     async (force = false) => {
       const fetchKey = `${manhwaId}-${chapterId}`;
