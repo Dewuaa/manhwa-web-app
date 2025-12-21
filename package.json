@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.0.7",
+    "@opennextjs/cloudflare": "^1.14.7",
     "@tailwindcss/postcss": "^4",
     "@types/minimatch": "^6.0.0",
     "@types/node": "^20",
