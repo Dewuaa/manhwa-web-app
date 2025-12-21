@@ -4,7 +4,6 @@ import {
   createContext,
   useContext,
   useCallback,
-  useEffect,
   useState,
   ReactNode,
 } from 'react';
@@ -52,18 +51,12 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const [notifications, setNotifications] = useState<ChapterNotification[]>([]);
+  // Use lazy initialization to avoid setState in useEffect
+  const [notifications, setNotifications] = useState<ChapterNotification[]>(() => getNotifications());
   const [preferences, setPreferences] =
-    useState<NotificationPreferences>(getNotificationPrefs());
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [hasPermission, setHasPermission] = useState(false);
-
-  // Load notifications on mount
-  useEffect(() => {
-    setNotifications(getNotifications());
-    setUnreadCount(getUnreadCount());
-    setHasPermission(hasNotificationPermission());
-  }, []);
+    useState<NotificationPreferences>(getNotificationPrefs);
+  const [unreadCount, setUnreadCount] = useState(() => getUnreadCount());
+  const [hasPermission, setHasPermission] = useState(() => hasNotificationPermission());
 
   const refreshNotifications = useCallback(() => {
     setNotifications(getNotifications());

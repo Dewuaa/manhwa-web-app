@@ -1,22 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 
 const STORAGE_KEY = 'inkora_search_history';
 const MAX_HISTORY = 10;
 
-export function useSearchHistory() {
-  const [history, setHistory] = useState<string[]>([]);
-
-  useEffect(() => {
-    // Load history from localStorage on mount
+// Helper to load history from localStorage
+function loadHistoryFromStorage(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setHistory(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to parse search history:', e);
-      }
-    }
-  }, []);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function useSearchHistory() {
+  // Use lazy initialization to avoid setState in useEffect
+  const [history, setHistory] = useState<string[]>(loadHistoryFromStorage);
 
   const addToHistory = (query: string) => {
     if (!query.trim()) return;

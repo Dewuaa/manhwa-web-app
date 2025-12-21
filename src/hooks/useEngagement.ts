@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 interface EngagementData {
   [manhwaId: string]: {
@@ -14,20 +14,20 @@ interface EngagementData {
 const STORAGE_KEY = 'manhwa_engagement';
 const ENGAGEMENT_WINDOW_DAYS = 7; // Only count engagement from last 7 days
 
-export function useEngagement() {
-  const [engagement, setEngagement] = useState<EngagementData>({});
+// Helper to load engagement from localStorage
+function loadEngagementFromStorage(): EngagementData {
+  if (typeof window === 'undefined') return {};
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
 
-  // Load engagement data
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setEngagement(JSON.parse(stored));
-      }
-    } catch (error) {
-      console.error('Failed to load engagement data:', error);
-    }
-  }, []);
+export function useEngagement() {
+  // Use lazy initialization to avoid setState in useEffect
+  const [engagement, setEngagement] = useState<EngagementData>(loadEngagementFromStorage);
 
   // Save engagement data
   const saveEngagement = useCallback((data: EngagementData) => {

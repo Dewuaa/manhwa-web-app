@@ -6,7 +6,6 @@ import {
   useCallback,
   useEffect,
   useState,
-  useMemo,
   ReactNode,
 } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -72,20 +71,13 @@ const ListsContext = createContext<ListsContextType | undefined>(undefined);
 
 export function ListsProvider({ children }: { children: ReactNode }) {
   const { user, isConfigured } = useAuth();
-  const [lists, setLists] = useState<LocalList[]>([]);
-  const [listItems, setListItems] = useState<LocalListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Use lazy initialization to avoid setState in useEffect
+  const [lists, setLists] = useState<LocalList[]>(() => getLocalLists());
+  const [listItems, setListItems] = useState<LocalListItem[]>(() => getLocalListItems());
+  const [isLoading, setIsLoading] = useState(false);
   const [hasSynced, setHasSynced] = useState(false);
 
   const isCloudEnabled = Boolean(user && isConfigured);
-
-  // Load lists immediately from local storage (fast)
-  useEffect(() => {
-    // Immediate load from local storage - no async
-    setLists(getLocalLists());
-    setListItems(getLocalListItems());
-    setIsLoading(false);
-  }, []);
 
   // Sync with cloud in background (slow, but non-blocking)
   useEffect(() => {
