@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build --webpack",
+    "build:cloudflare": "npx @cloudflare/next-on-pages",
+    "preview:cloudflare": "npx wrangler pages dev .vercel/output/static",
+    "deploy:cloudflare": "npx wrangler pages deploy .vercel/output/static",
     "start": "next start",
     "lint": "eslint"
   },

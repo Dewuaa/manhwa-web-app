@@ -3,6 +3,7 @@ import GenreContent from './GenreContent';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -25,7 +26,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function GenreDetailPage({ params }: PageProps) {
+export default async function GenreDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  return <GenreContent slug={slug} />;
+  const { page } = await searchParams;
+  const currentPage = page ? parseInt(page, 10) : 1;
+
+  return <GenreContent slug={slug} initialPage={currentPage} />;
 }

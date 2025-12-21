@@ -1,8 +1,14 @@
 import type { NextConfig } from 'next';
 import withPWA from 'next-pwa';
 
+// Detect if building for Cloudflare Pages
+const isCloudflare = process.env.CF_PAGES === '1';
+
 const nextConfig: NextConfig = {
   images: {
+    // On Cloudflare, disable Next.js image optimization (use unoptimized or external service)
+    // This saves you from Vercel's image optimization limits!
+    unoptimized: isCloudflare,
     remotePatterns: [
       // API proxy (for images with hotlink protection)
       {

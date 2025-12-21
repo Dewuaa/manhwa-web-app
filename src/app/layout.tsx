@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import { Analytics } from '@vercel/analytics/react';
+import PlatformAnalytics from '@/components/PlatformAnalytics';
 import './globals.css';
 import ScrollToTop from '@/components/ScrollToTop';
 import AppLayout from '@/components/AppLayout';
@@ -141,7 +141,7 @@ export default function RootLayout({
             </CloudSyncProvider>
           </AuthProvider>
         </QueryProvider>
-        <Analytics />
+        <PlatformAnalytics />
       </body>
     </html>
   );

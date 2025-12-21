@@ -1,0 +1,16 @@
+# Cloudflare Pages configuration
+# This file configures your Next.js app for Cloudflare Pages deployment
+# Your Vercel deployment will ignore this file
+
+name = "inkora-manhwa"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Environment variables (set these in Cloudflare Dashboard for secrets)
+# [vars]
+# NEXT_PUBLIC_API_URL = "your-api-url"
+
+# KV Namespaces (optional - for caching)
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = "your-kv-namespace-id"

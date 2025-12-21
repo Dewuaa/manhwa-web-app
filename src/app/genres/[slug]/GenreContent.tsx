@@ -2,9 +2,9 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Tag } from 'lucide-react';
 import { useGenreManhwa, usePrefetchNextPage } from '@/hooks/useApi';
-import { Manhwa } from '@/lib/types';
 import ManhwaCard from '@/components/ManhwaCard';
 import { ManhwaGridSkeleton } from '@/components/LoadingSkeleton';
 import Pagination from '@/components/Pagination';
@@ -15,9 +15,9 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
-    }
-  }
+      staggerChildren: 0.1,
+    },
+  },
 };
 
 interface GenreContentProps {
@@ -26,28 +26,34 @@ interface GenreContentProps {
 }
 
 export default function GenreContent({ slug, initialPage = 1 }: GenreContentProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Get current page from URL or use initialPage
+  const currentPage = parseInt(searchParams.get('page') || String(initialPage), 10);
+
   const decodedSlug = decodeURIComponent(slug).replace(/-/g, ' ');
   const title = decodedSlug.charAt(0).toUpperCase() + decodedSlug.slice(1);
 
   // Use cached genre data with React Query
-  const { data, isLoading, error, refetch } = useGenreManhwa(slug, initialPage);
+  const { data, isLoading, error, refetch } = useGenreManhwa(slug, currentPage);
   const { prefetchGenre } = usePrefetchNextPage();
-  
+
   const manhwaList = data?.results || [];
   const hasNextPage = data?.hasNextPage || false;
 
   // Prefetch next page for faster navigation
   useEffect(() => {
     if (hasNextPage) {
-      prefetchGenre(slug, initialPage + 1);
+      prefetchGenre(slug, currentPage + 1);
     }
-  }, [slug, initialPage, hasNextPage, prefetchGenre]);
+  }, [slug, currentPage, hasNextPage, prefetchGenre]);
 
   const handlePageChange = (newPage: number) => {
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Note: Page navigation would typically be handled by router.push
-    // For now, we'll rely on parent component to handle this
+    // Navigate to new page
+    router.push(`/genres/${slug}?page=${newPage}`);
   };
 
   return (
@@ -63,7 +69,7 @@ export default function GenreContent({ slug, initialPage = 1 }: GenreContentProp
               <ArrowLeft className="w-5 h-5 mr-2" />
               Back to Genres
             </Link>
-            
+
             <h1 className="text-xl font-bold text-white flex items-center capitalize">
               <Tag className="w-5 h-5 mr-2 text-red-500" />
               {title}
@@ -91,7 +97,7 @@ export default function GenreContent({ slug, initialPage = 1 }: GenreContentProp
           </div>
         ) : (
           <>
-            <motion.div 
+            <motion.div
               className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5"
               variants={containerVariants}
               initial="hidden"
@@ -101,12 +107,12 @@ export default function GenreContent({ slug, initialPage = 1 }: GenreContentProp
                 <ManhwaCard key={manhwa.id} manhwa={manhwa} />
               ))}
             </motion.div>
-            
+
             {/* Pagination */}
             {!isLoading && manhwaList.length > 0 && (
               <>
                 <Pagination
-                  currentPage={initialPage}
+                  currentPage={currentPage}
                   hasNextPage={hasNextPage}
                   onPageChange={handlePageChange}
                   isLoading={isLoading}
