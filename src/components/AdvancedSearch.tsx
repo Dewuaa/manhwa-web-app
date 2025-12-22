@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Filter, Shuffle, Loader2 } from 'lucide-react';
 import { manhwaAPI } from '@/lib/api';
+import { saveNavigationOrigin } from './ManhwaLink';
 import { useGenres } from '@/hooks/useApi';
 import SearchModal from './SearchModal';
 
@@ -107,6 +108,7 @@ export default function AdvancedSearch({
       if (results.results.length > 0) {
         const randomManhwa =
           results.results[Math.floor(Math.random() * results.results.length)];
+        saveNavigationOrigin();
         router.push(`/manhwa/${encodeURIComponent(randomManhwa.id)}`);
       }
     } catch (error) {

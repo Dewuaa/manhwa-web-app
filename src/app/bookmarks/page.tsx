@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { saveNavigationOrigin } from '@/components/ManhwaLink';
 import { getBookmarks, clearBookmarks, removeBookmark, Bookmark } from '@/lib/storage';
 import { Search, BookOpen, Trash2, ChevronRight, Heart, X, List } from 'lucide-react';
 import { useReadingHistory } from '@/hooks/useReadingHistory';
@@ -218,9 +219,10 @@ export default function BookmarksPage() {
                   key={bookmark.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  onClick={() =>
-                    router.push(`/manhwa/${encodeURIComponent(bookmark.id)}`)
-                  }
+                  onClick={() => {
+                    saveNavigationOrigin();
+                    router.push(`/manhwa/${encodeURIComponent(bookmark.id)}`);
+                  }}
                   className="flex gap-4 p-4 bg-gray-900/40 border border-white/5 rounded-2xl cursor-pointer hover:bg-gray-800/60 hover:border-white/10 transition-all group relative"
                 >
                   {/* Action Buttons */}

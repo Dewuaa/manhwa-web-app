@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import { ManhwaLink } from './ManhwaLink';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 import { MessageSquare, Heart, ChevronRight, Users } from 'lucide-react';
@@ -161,7 +162,7 @@ export function RecentDiscussions() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Link
+              <ManhwaLink
                 href={`/manhwa/${comment.manhwa_id}`}
                 className="block bg-white/5 hover:bg-white/8 backdrop-blur-sm rounded-xl p-3 border border-white/5 hover:border-white/10 transition-all"
               >
@@ -216,7 +217,7 @@ export function RecentDiscussions() {
                     </div>
                   )}
                 </div>
-              </Link>
+              </ManhwaLink>
             </motion.div>
           ))}
         </div>

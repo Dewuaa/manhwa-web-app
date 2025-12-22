@@ -14,6 +14,7 @@ import {
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { manhwaAPI } from '@/lib/api';
+import { saveNavigationOrigin } from './ManhwaLink';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { useGenres } from '@/hooks/useApi';
@@ -111,6 +112,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     if (query.trim()) {
       addToHistory(query);
     }
+    saveNavigationOrigin();
     router.push(`/manhwa/${encodeURIComponent(id)}`);
     onClose();
   };
