@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Github,
   Twitter,
@@ -27,8 +28,14 @@ export default function Footer() {
           {/* Brand - Mobile */}
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 flex items-center justify-center shadow-[0_0_20px_rgba(147,51,234,0.5)]">
-                <span className="text-white font-black text-xl">墨</span>
+              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(147,51,234,0.5)]">
+                <Image
+                  src="/inkora-logo.svg"
+                  alt="Inkora"
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="flex flex-col items-start">
                 <span className="text-white font-bold tracking-tight text-lg">
@@ -178,8 +185,14 @@ export default function Footer() {
             {/* Brand - Desktop */}
             <div className="col-span-2 space-y-6">
               <div className="flex items-center gap-3 group">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 flex items-center justify-center shadow-[0_0_25px_rgba(147,51,234,0.5)] group-hover:shadow-[0_0_35px_rgba(147,51,234,0.7)] transition-all duration-300">
-                  <span className="text-white font-black text-2xl">墨</span>
+                <div className="w-12 h-12 rounded-xl overflow-hidden shadow-[0_0_25px_rgba(147,51,234,0.5)] group-hover:shadow-[0_0_35px_rgba(147,51,234,0.7)] transition-all duration-300">
+                  <Image
+                    src="/inkora-logo.svg"
+                    alt="Inkora"
+                    width={48}
+                    height={48}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-white font-bold tracking-tight text-xl">

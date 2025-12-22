@@ -131,13 +131,15 @@ export default function Comments({
         {/* Avatar */}
         <div className="shrink-0">
           {comment.profiles?.avatar_url ? (
-            <Image
-              src={comment.profiles.avatar_url}
-              alt={comment.profiles.username || 'User'}
-              width={isReply ? 32 : 40}
-              height={isReply ? 32 : 40}
-              className="rounded-full object-cover"
-            />
+            <div className={`${isReply ? 'w-8 h-8' : 'w-10 h-10'} rounded-full overflow-hidden`}>
+              <Image
+                src={comment.profiles.avatar_url}
+                alt={comment.profiles.username || 'User'}
+                width={isReply ? 32 : 40}
+                height={isReply ? 32 : 40}
+                className="w-full h-full object-cover"
+              />
+            </div>
           ) : (
             <div
               className={`${isReply ? 'w-8 h-8' : 'w-10 h-10'} rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm`}
@@ -296,13 +298,15 @@ export default function Comments({
               <div className="flex gap-3">
                 <div className="shrink-0">
                   {profile?.avatar_url ? (
-                    <Image
-                      src={profile.avatar_url}
-                      alt={profile.username || 'You'}
-                      width={40}
-                      height={40}
-                      className="rounded-full object-cover"
-                    />
+                    <div className="w-10 h-10 rounded-full overflow-hidden">
+                      <Image
+                        src={profile.avatar_url}
+                        alt={profile.username || 'You'}
+                        width={40}
+                        height={40}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
                       {profile?.username?.[0]?.toUpperCase() || 'U'}

@@ -1,8 +1,14 @@
 import type { NextConfig } from 'next';
 import withPWA from 'next-pwa';
+import withBundleAnalyzer from '@next/bundle-analyzer';
 
 // Detect if building for Cloudflare Pages
 const isCloudflare = process.env.CF_PAGES === '1';
+
+// Bundle analyzer config
+const bundleAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
 
 const nextConfig: NextConfig = {
   images: {
@@ -210,9 +216,12 @@ const nextConfig: NextConfig = {
   turbopack: {}, // Enable Turbopack compatibility
 };
 
-export default withPWA({
-  dest: 'public',
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
-})(nextConfig);
+// Chain the plugins: bundleAnalyzer -> withPWA -> nextConfig
+export default bundleAnalyzer(
+  withPWA({
+    dest: 'public',
+    register: true,
+    skipWaiting: true,
+    disable: process.env.NODE_ENV === 'development',
+  })(nextConfig)
+);

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Home, Compass, BookOpen, User, Settings, LogOut } from 'lucide-react';
+import { Home, Compass, BookOpen, User, Settings, LogOut, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
@@ -12,6 +12,7 @@ export const NavBar = () => {
   const navItems = [
     { id: 'home', icon: Home, label: 'Home', href: '/' },
     { id: 'discover', icon: Compass, label: 'Discover', href: '/genres' },
+    { id: 'community', icon: Users, label: 'Community', href: '/community' },
     { id: 'library', icon: BookOpen, label: 'Library', href: '/bookmarks' },
     { id: 'me', icon: User, label: 'Me', href: '/profile' },
   ];
@@ -64,10 +65,10 @@ export const NavBar = () => {
         <div className="mb-12">
           <Link
             href="/"
-            className="w-12 h-12 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(147,51,234,0.4)] group cursor-pointer hover:scale-105 transition-transform"
+            className="block w-12 h-12 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(147,51,234,0.4)] group cursor-pointer hover:scale-105 transition-transform"
           >
             <Image
-              src="/icon-192.png"
+              src="/inkora-logo.svg"
               alt="Inkora"
               width={48}
               height={48}

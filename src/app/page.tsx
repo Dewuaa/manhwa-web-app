@@ -17,6 +17,7 @@ import {
   Clock,
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Hero } from '@/components/zenith/Hero';
 import { CategoryRow } from '@/components/zenith/CategoryRow';
@@ -26,6 +27,7 @@ import ContinueReading from '@/components/ContinueReading';
 import { FreshUpdates } from '@/components/zenith/FreshUpdates';
 import { RecommendationsRow } from '@/components/RecommendationsRow';
 import { NotificationBell } from '@/components/NotificationBell';
+import { RecentDiscussions } from '@/components/RecentDiscussions';
 
 const CATEGORIES = [
   'Popular',
@@ -303,10 +305,14 @@ export default function Home() {
         <div className="flex justify-between items-center px-3.5 sm:px-4 h-14 sm:h-16 max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-2">
             {/* Logo visible only on mobile, moved to sidebar on desktop */}
-            <div className="md:hidden w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 flex items-center justify-center shadow-[0_0_15px_rgba(147,51,234,0.5)]">
-              <span className="text-white font-black text-base sm:text-lg leading-none">
-                墨
-              </span>
+            <div className="md:hidden w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl overflow-hidden shadow-[0_0_15px_rgba(147,51,234,0.5)]">
+              <Image
+                src="/inkora-logo.svg"
+                alt="Inkora"
+                width={36}
+                height={36}
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="flex flex-col md:hidden">
               <span className="text-white font-bold tracking-tight text-base sm:text-lg leading-none">
@@ -387,6 +393,9 @@ export default function Home() {
         {activeCategory === 'Popular' && (
           <RecommendationsRow availableManhwa={trendingManhwa} />
         )}
+
+        {/* Recent Discussions - Only on Popular/Home */}
+        {activeCategory === 'Popular' && <RecentDiscussions />}
 
         {/* Dynamic Content Area */}
         {(() => {
