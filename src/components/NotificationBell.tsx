@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { ManhwaLink } from './ManhwaLink';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -166,7 +167,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
                         notification.read ? 'bg-transparent' : 'bg-blue-500/5'
                       }`}
                     >
-                      <Link
+                      <ManhwaLink
                         href={`/manhwa/${encodeURIComponent(notification.manhwaId)}`}
                         onClick={() => {
                           markAsRead(notification.id);
@@ -212,7 +213,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
                         )}
 
                         <ChevronRight className="w-4 h-4 text-gray-600 flex-shrink-0 mt-2" />
-                      </Link>
+                      </ManhwaLink>
 
                       {/* Delete button on hover */}
                       <button

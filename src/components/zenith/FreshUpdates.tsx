@@ -1,6 +1,6 @@
 import React from 'react';
 import { Zap } from 'lucide-react';
-import Link from 'next/link';
+import { ManhwaLink } from '../ManhwaLink';
 import { Manhwa } from '@/lib/types';
 import { SectionHeader } from './SectionHeader';
 import ImageWithFallback from '../ImageWithFallback';
@@ -39,7 +39,7 @@ export const FreshUpdates: React.FC<FreshUpdatesProps> = ({ manhwaList, loading 
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
         {displayList.map((manga, i) => (
-          <Link
+          <ManhwaLink
             key={`${manga.id}-${i}`}
             href={`/manhwa/${encodeURIComponent(manga.id)}`}
             className="flex gap-3 sm:gap-4 bg-gray-900/40 border border-white/5 p-2 sm:p-2.5 rounded-xl hover:bg-gray-800/80 hover:border-white/10 transition-all cursor-pointer group active:scale-[0.98]"
@@ -76,7 +76,7 @@ export const FreshUpdates: React.FC<FreshUpdatesProps> = ({ manhwaList, loading 
                 </div>
               )}
             </div>
-          </Link>
+          </ManhwaLink>
         ))}
       </div>
     </section>

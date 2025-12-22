@@ -175,8 +175,24 @@ export default function ManhwaDetailPage() {
   };
 
   const handleBack = () => {
-    // Always go to home from details page to avoid navigation loops
-    router.push('/');
+    // Check window.history.length to determine if user has navigation history
+    // If length is 1-2, user likely came directly to this page or from external link
+    if (window.history.length <= 2) {
+      router.push('/');
+      return;
+    }
+    
+    // Use router.back() but the click handler on the link will save origin
+    // Check if we have a saved origin (set from list pages before navigation)
+    const origin = sessionStorage.getItem('manhwa_back_origin');
+    
+    if (origin) {
+      sessionStorage.removeItem('manhwa_back_origin');
+      router.push(origin);
+    } else {
+      // Fallback: go back in history, but if that fails, go home
+      router.back();
+    }
   };
 
   const sortedChapters = useMemo(() => {

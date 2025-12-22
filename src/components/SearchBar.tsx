@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, X, Loader2 } from 'lucide-react';
 import { manhwaAPI } from '@/lib/api';
 import { Manhwa } from '@/lib/types';
-import Link from 'next/link';
+import { ManhwaLink } from './ManhwaLink';
 import Image from 'next/image';
 
 interface SearchBarProps {
@@ -113,7 +113,7 @@ export default function SearchBar({ initialQuery = '', onSearch }: SearchBarProp
           ) : (
             <div className="py-2">
               {suggestions.map((manhwa) => (
-                <Link
+                <ManhwaLink
                   key={manhwa.id}
                   href={`/manhwa/${encodeURIComponent(manhwa.id)}`}
                   onClick={() => setIsOpen(false)}
@@ -140,7 +140,7 @@ export default function SearchBar({ initialQuery = '', onSearch }: SearchBarProp
                       </p>
                     )}
                   </div>
-                </Link>
+                </ManhwaLink>
               ))}
               <button
                 onClick={handleSubmit}

@@ -14,6 +14,7 @@ import {
   Ghost,
 } from 'lucide-react';
 import Link from 'next/link';
+import { ManhwaLink } from '../ManhwaLink';
 import { Manhwa } from '@/lib/types';
 import ImageWithFallback from '../ImageWithFallback';
 import { manhwaAPI } from '@/lib/api';
@@ -230,7 +231,7 @@ export const Discover: React.FC<DiscoverProps> = ({ topManhwa = [], loading }) =
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {topManhwa.slice(0, 9).map((manga, index) => (
-                <Link
+                <ManhwaLink
                   key={manga.id}
                   href={`/manhwa/${encodeURIComponent(manga.id)}`}
                   className="flex gap-4 p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5 cursor-pointer group"
@@ -278,7 +279,7 @@ export const Discover: React.FC<DiscoverProps> = ({ topManhwa = [], loading }) =
                       )}
                     </div>
                   </div>
-                </Link>
+                </ManhwaLink>
               ))}
             </div>
           )}

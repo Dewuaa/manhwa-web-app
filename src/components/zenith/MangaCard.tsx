@@ -1,6 +1,6 @@
 import React from 'react';
 import { Star } from 'lucide-react';
-import Link from 'next/link';
+import { ManhwaLink } from '../ManhwaLink';
 import { Manhwa } from '@/lib/types';
 import ImageWithFallback from '../ImageWithFallback';
 
@@ -11,7 +11,7 @@ interface MangaCardProps {
 
 export const MangaCard: React.FC<MangaCardProps> = ({ manhwa, rank }) => {
   return (
-    <Link
+    <ManhwaLink
       href={`/manhwa/${encodeURIComponent(manhwa.id)}`}
       className="snap-center flex-none w-[130px] sm:w-[145px] md:w-[160px] lg:w-[180px] flex flex-col gap-2 sm:gap-3 group cursor-pointer"
     >
@@ -62,6 +62,6 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manhwa, rank }) => {
           {manhwa.status && manhwa.status !== 'Unknown' && <> • {manhwa.status}</>}
         </p>
       </div>
-    </Link>
+    </ManhwaLink>
   );
 };

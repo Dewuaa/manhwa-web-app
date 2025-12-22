@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { ManhwaLink } from './ManhwaLink';
 import Image from 'next/image';
 import { Flame } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -45,7 +45,7 @@ export default function TrendingSection({ manhwaList }: TrendingSectionProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.05 }}
           >
-            <Link href={`/manhwa/${encodeURIComponent(manhwa.id)}`}>
+            <ManhwaLink href={`/manhwa/${encodeURIComponent(manhwa.id)}`}>
               <div className="group relative">
                 {/* Trending Badge */}
                 <div className="absolute top-2 left-2 z-10 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
@@ -71,7 +71,7 @@ export default function TrendingSection({ manhwaList }: TrendingSectionProps) {
                   </h3>
                 </div>
               </div>
-            </Link>
+            </ManhwaLink>
           </motion.div>
         ))}
       </div>

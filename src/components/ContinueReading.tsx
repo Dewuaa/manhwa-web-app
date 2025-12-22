@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { ManhwaLink } from './ManhwaLink';
 import { X, Play, BookOpen, Clock } from 'lucide-react';
 import ImageWithFallback from './ImageWithFallback';
 import { useReadingHistory } from '@/hooks/useReadingHistory';
@@ -52,7 +52,7 @@ export default function ContinueReading() {
                   <X className="w-3 h-3 text-white" />
                 </button>
 
-                <Link
+                <ManhwaLink
                   href={`/manhwa/${encodeURIComponent(item.manhwaId)}/read/${encodeURIComponent(item.lastChapterId)}`}
                   className="flex gap-3 sm:gap-4 w-full"
                 >
@@ -100,7 +100,7 @@ export default function ContinueReading() {
                       </span>
                     )}
                   </div>
-                </Link>
+                </ManhwaLink>
               </div>
             </motion.div>
           );

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Star, ChevronRight, PlayCircle, ChevronLeft } from 'lucide-react';
-import Link from 'next/link';
+import { ManhwaLink } from '../ManhwaLink';
 import { Manhwa } from '@/lib/types';
 
 interface HeroProps {
@@ -116,15 +116,15 @@ export const Hero: React.FC<HeroProps> = ({ featuredManga }) => {
                 </div>
 
                 {/* Title */}
-                <Link href={`/manhwa/${encodeURIComponent(manga.id)}`}>
+                <ManhwaLink href={`/manhwa/${encodeURIComponent(manga.id)}`}>
                   <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] mb-3 md:mb-4 drop-shadow-2xl line-clamp-2 cursor-pointer hover:text-blue-100 transition-colors">
                     {manga.title}
                   </h1>
-                </Link>
+                </ManhwaLink>
 
                 {/* Actions */}
                 <div className="flex items-center gap-3 mt-4 md:mt-6">
-                  <Link
+                  <ManhwaLink
                     href={`/manhwa/${encodeURIComponent(manga.id)}`}
                     className="bg-white text-black px-5 py-3 sm:px-6 sm:py-3.5 md:px-8 md:py-4 rounded-full font-bold flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-105 active:scale-95 transition-all group text-sm sm:text-base"
                   >
@@ -134,7 +134,7 @@ export const Hero: React.FC<HeroProps> = ({ featuredManga }) => {
                       fill="currentColor"
                     />
                     <span>Read Now</span>
-                  </Link>
+                  </ManhwaLink>
                   <button className="w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 active:scale-95 transition-all">
                     <Sparkles
                       size={18}

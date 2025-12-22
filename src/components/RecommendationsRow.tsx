@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { ManhwaLink } from './ManhwaLink';
 import { motion } from 'framer-motion';
 import { Sparkles, ChevronRight } from 'lucide-react';
 import { Manhwa } from '@/lib/types';
@@ -99,7 +100,7 @@ export function RecommendationsRow({
               transition={{ delay: index * 0.05 }}
               className="flex-shrink-0 w-[140px] md:w-[160px]"
             >
-              <Link
+              <ManhwaLink
                 href={`/manhwa/${encodeURIComponent(manhwa.id)}`}
                 className="group block"
               >
@@ -142,7 +143,7 @@ export function RecommendationsRow({
                         : 'For you'}
                   </p>
                 )}
-              </Link>
+              </ManhwaLink>
             </motion.div>
           ))}
         </div>
@@ -180,7 +181,7 @@ export function RecommendationsWidget({
 
       <div className="space-y-3">
         {recommendations.slice(0, 5).map((manhwa) => (
-          <Link
+          <ManhwaLink
             key={manhwa.id}
             href={`/manhwa/${encodeURIComponent(manhwa.id)}`}
             className="flex gap-3 group"
@@ -200,7 +201,7 @@ export function RecommendationsWidget({
               </p>
               <p className="text-xs text-gray-500 truncate">{manhwa.reason.message}</p>
             </div>
-          </Link>
+          </ManhwaLink>
         ))}
       </div>
     </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { ManhwaLink } from './ManhwaLink';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Star, Calendar, BookOpen } from 'lucide-react';
 import { Manhwa } from '@/lib/types';
@@ -106,13 +106,13 @@ export default function HeroCarousel({ manhwaList }: HeroCarouselProps) {
                 transition={{ delay: 0.5 }}
                 className="flex items-center space-x-3 md:space-x-4"
               >
-                <Link
+                <ManhwaLink
                   href={`/manhwa/${encodeURIComponent(featured[currentIndex].id)}`}
                   className="flex-1 md:flex-none px-8 py-4 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold flex items-center justify-center transition-all shadow-xl shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-1 text-sm md:text-base group/btn"
                 >
                   Read Now
                   <ChevronRight className="w-5 h-5 ml-2 transition-transform group-hover/btn:translate-x-1" />
-                </Link>
+                </ManhwaLink>
                 <button className="flex-1 md:flex-none px-8 py-4 bg-white/5 hover:bg-white/10 backdrop-blur-md text-white rounded-xl font-bold border border-white/10 transition-all hover:-translate-y-1 text-sm md:text-base hover:border-white/20">
                   More Info
                 </button>

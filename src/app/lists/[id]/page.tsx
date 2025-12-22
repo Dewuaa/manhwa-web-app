@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ManhwaLink } from '@/components/ManhwaLink';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -241,7 +242,7 @@ export default function ListDetailPage() {
                   transition={{ delay: index * 0.03 }}
                   className="group relative"
                 >
-                  <Link href={`/manhwa/${encodeURIComponent(item.manhwaId)}`}>
+                  <ManhwaLink href={`/manhwa/${encodeURIComponent(item.manhwaId)}`}>
                     <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-800">
                       {item.image ? (
                         <ImageWithFallback
@@ -273,7 +274,7 @@ export default function ListDetailPage() {
 
                       {/* Continue Reading Button */}
                       {progress?.lastChapterId && (
-                        <Link
+                        <ManhwaLink
                           href={`/manhwa/${encodeURIComponent(item.manhwaId)}/read/${encodeURIComponent(progress.lastChapterId)}`}
                           onClick={(e) => e.stopPropagation()}
                           className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50"
@@ -281,7 +282,7 @@ export default function ListDetailPage() {
                           <div className="bg-white rounded-full p-3">
                             <Play size={20} className="text-black fill-black ml-0.5" />
                           </div>
-                        </Link>
+                        </ManhwaLink>
                       )}
                     </div>
 
@@ -295,7 +296,7 @@ export default function ListDetailPage() {
                         </p>
                       )}
                     </div>
-                  </Link>
+                  </ManhwaLink>
 
                   {/* Remove Button */}
                   <button
@@ -347,7 +348,7 @@ export default function ListDetailPage() {
                   transition={{ delay: index * 0.03 }}
                   className="group"
                 >
-                  <Link href={`/manhwa/${encodeURIComponent(item.manhwaId)}`}>
+                  <ManhwaLink href={`/manhwa/${encodeURIComponent(item.manhwaId)}`}>
                     <div className="flex items-center gap-4 p-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-colors">
                       {/* Image */}
                       <div className="relative w-16 h-20 rounded-lg overflow-hidden shrink-0">
@@ -392,13 +393,13 @@ export default function ListDetailPage() {
 
                       {/* Continue Button */}
                       {progress?.lastChapterId && (
-                        <Link
+                        <ManhwaLink
                           href={`/manhwa/${encodeURIComponent(item.manhwaId)}/read/${encodeURIComponent(progress.lastChapterId)}`}
                           onClick={(e) => e.stopPropagation()}
                           className="p-3 bg-blue-600 hover:bg-blue-700 rounded-full text-white transition-colors"
                         >
                           <Play size={16} className="fill-white ml-0.5" />
-                        </Link>
+                        </ManhwaLink>
                       )}
 
                       {/* Menu */}
@@ -412,7 +413,7 @@ export default function ListDetailPage() {
                         <MoreVertical size={16} />
                       </button>
                     </div>
-                  </Link>
+                  </ManhwaLink>
 
                   <AnimatePresence>
                     {itemMenu === item.id && (

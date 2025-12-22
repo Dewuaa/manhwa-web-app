@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { ManhwaLink } from './ManhwaLink';
 import Image from 'next/image';
 import { Clock, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -53,7 +53,7 @@ export default function RecentlyUpdated({ manhwaList }: RecentlyUpdatedProps) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.05 }}
           >
-            <Link href={`/manhwa/${encodeURIComponent(manhwa.id)}`}>
+            <ManhwaLink href={`/manhwa/${encodeURIComponent(manhwa.id)}`}>
               <div className="group flex gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-xl ring-1 ring-white/10 hover:ring-blue-500/50 transition-all">
                 {/* Thumbnail */}
                 <div className="relative w-16 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-white/5">
@@ -87,7 +87,7 @@ export default function RecentlyUpdated({ manhwaList }: RecentlyUpdatedProps) {
                   </div>
                 </div>
               </div>
-            </Link>
+            </ManhwaLink>
           </motion.div>
         ))}
       </div>

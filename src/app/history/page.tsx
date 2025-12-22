@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { ManhwaLink } from '@/components/ManhwaLink';
 import { ArrowLeft, Trash2, Play, History } from 'lucide-react';
 import { useReadingHistory } from '@/hooks/useReadingHistory';
 import { getBookmarks, removeBookmark, Bookmark } from '@/lib/storage';
@@ -155,7 +156,7 @@ export default function LibraryPage() {
                   </button>
 
                   {/* Cover Image */}
-                  <Link
+                  <ManhwaLink
                     href={`/manhwa/${encodeURIComponent(item.id)}`}
                     className="relative block aspect-2/3 overflow-hidden bg-black/20"
                   >
@@ -165,16 +166,16 @@ export default function LibraryPage() {
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                  </Link>
+                  </ManhwaLink>
 
                   {/* Info */}
                   <div className="p-3">
-                    <Link
+                    <ManhwaLink
                       href={`/manhwa/${encodeURIComponent(item.id)}`}
                       className="font-bold text-white text-sm line-clamp-2 hover:text-blue-400 transition-colors mb-2 block"
                     >
                       {item.title}
-                    </Link>
+                    </ManhwaLink>
 
                     {item.lastChapterId && (
                       <div className="text-xs text-blue-400 font-medium mb-2">
@@ -201,7 +202,7 @@ export default function LibraryPage() {
                     )}
 
                     {/* Continue/Start Button */}
-                    <Link
+                    <ManhwaLink
                       href={
                         item.lastChapterId
                           ? `/manhwa/${encodeURIComponent(item.id)}/read/${encodeURIComponent(item.lastChapterId)}`
@@ -211,7 +212,7 @@ export default function LibraryPage() {
                     >
                       <Play size={12} fill="currentColor" />
                       {item.lastChapterId ? 'Continue' : 'Start Reading'}
-                    </Link>
+                    </ManhwaLink>
                   </div>
                 </div>
               );

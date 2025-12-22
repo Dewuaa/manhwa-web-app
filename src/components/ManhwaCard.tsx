@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { ManhwaLink } from './ManhwaLink';
 import { Manhwa } from '@/lib/types';
 import { BookOpen, Star, Eye, TrendingUp } from 'lucide-react';
 import ImageWithFallback from './ImageWithFallback';
@@ -11,7 +11,7 @@ interface ManhwaCardProps {
 
 const ManhwaCard = ({ manhwa, showNewBadge, rank }: ManhwaCardProps) => {
   return (
-    <Link
+    <ManhwaLink
       href={`/manhwa/${encodeURIComponent(manhwa.id)}`}
       className="group relative block w-full h-full"
     >
@@ -89,7 +89,7 @@ const ManhwaCard = ({ manhwa, showNewBadge, rank }: ManhwaCardProps) => {
           </div>
         </div>
       </div>
-    </Link>
+    </ManhwaLink>
   );
 };
 
