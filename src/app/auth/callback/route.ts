@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
+  const type = requestUrl.searchParams.get('type');
   const origin = requestUrl.origin;
 
   if (code) {
@@ -36,9 +37,15 @@ export async function GET(request: Request) {
           level: 1,
         });
       }
+
+      // If this is an email verification (signup confirmation), redirect to verified page
+      if (type === 'signup' || type === 'email') {
+        return NextResponse.redirect(`${origin}/auth/verified`);
+      }
     }
   }
 
-  // Redirect back to home
+  // Redirect back to home for other cases (OAuth, magic link, etc.)
   return NextResponse.redirect(`${origin}/`);
 }
+
