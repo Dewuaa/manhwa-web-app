@@ -2,7 +2,7 @@
 # This file configures your Next.js app for Cloudflare Pages deployment
 # Your Vercel deployment will ignore this file
 
-name = "inkora-manhwa"
+name = "manhwa-web-app"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
