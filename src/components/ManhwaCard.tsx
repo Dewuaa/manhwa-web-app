@@ -83,7 +83,9 @@ const ManhwaCard = ({ manhwa, showNewBadge, rank }: ManhwaCardProps) => {
             {manhwa.latestChapter && (
               <span className="flex items-center font-medium text-white/90 bg-white/10 backdrop-blur-sm px-1.5 sm:px-2 py-0.5 sm:py-1 rounded sm:rounded-md border border-white/10">
                 <BookOpen className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 sm:mr-1.5 text-primary" />
-                {manhwa.latestChapter.replace('Chapter', 'Ch.')}
+                {typeof manhwa.latestChapter === 'number' 
+                  ? `Ch. ${manhwa.latestChapter}`
+                  : String(manhwa.latestChapter).replace('Chapter', 'Ch.')}
               </span>
             )}
           </div>

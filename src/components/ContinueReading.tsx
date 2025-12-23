@@ -33,7 +33,7 @@ export default function ContinueReading() {
 
           return (
             <motion.div
-              key={item.manhwaId}
+              key={`${item.manhwaId}-${index}`}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}

@@ -1,8 +1,15 @@
 export enum Provider {
-  MGEKO = 'mgeko', // Primary provider
+  COMIXTO = 'comixto', // Primary provider with scan group support
+  MGEKO = 'mgeko', // Fallback provider
   MANHUAPLUS = 'manhuaplus',
   MANHUAUS = 'manhuaus',
   UNIFIED = 'unified', // Auto-fallback provider
+}
+
+export interface ScanGroup {
+  id: number;
+  name: string;
+  slug?: string;
 }
 
 export interface Manhwa {
@@ -10,7 +17,7 @@ export interface Manhwa {
   title: string;
   image: string;
   status: string;
-  latestChapter: string;
+  latestChapter: string | number;
   latestChapters?: Array<{ title: string; releaseDate: string }>;
   rating?: number | string | null;
   ratingCount?: number;
@@ -35,6 +42,11 @@ export interface Chapter {
   title: string;
   chapterNumber?: number;
   releaseDate?: string;
+  // Scan group support for Comix.to
+  scanGroup?: ScanGroup | null;
+  isOfficial?: boolean;
+  hasMultipleVersions?: boolean;
+  versions?: Chapter[];
 }
 
 export interface ManhwaInfo {
@@ -69,6 +81,22 @@ export interface ChapterPage {
 export interface MetadataEnrichment {
   genres?: string[];
   authors?: string[];
-  releaseDate?: string;
-  description?: string;
+  releaseDate?: string | null;
+  description?: string | null;
+  // AniList-specific fields
+  anilistId?: number;
+  anilistUrl?: string;
+  rating?: number | null;
+  image?: string; // HD cover from AniList
+  cover?: string | null; // Banner image
+  status?: string;
+  totalChapters?: number | null;
+  tags?: string[];
+  recommendations?: {
+    id: number;
+    title: string;
+    image: string;
+    rating: number | null;
+  }[];
 }
+

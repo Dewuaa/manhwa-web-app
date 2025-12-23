@@ -11,7 +11,7 @@ export const NavBar = () => {
 
   const navItems = [
     { id: 'home', icon: Home, label: 'Home', href: '/' },
-    { id: 'discover', icon: Compass, label: 'Discover', href: '/genres' },
+    { id: 'browse', icon: Compass, label: 'Browse', href: '/browse' },
     { id: 'community', icon: Users, label: 'Community', href: '/community' },
     { id: 'library', icon: BookOpen, label: 'Library', href: '/bookmarks' },
     { id: 'me', icon: User, label: 'Me', href: '/profile' },

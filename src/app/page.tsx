@@ -41,8 +41,8 @@ const CATEGORIES = [
 
 export default function Home() {
   const router = useRouter();
-  // Use Mgeko provider directly
-  const [provider] = useState<Provider>(Provider.MGEKO);
+  // Use Comixto provider directly
+  const [provider] = useState<Provider>(Provider.COMIXTO);
   const [activeCategory, setActiveCategory] = useState('Popular');
 
   // State for each section
@@ -285,7 +285,7 @@ export default function Home() {
   const loadCompletedSection = async () => {
     try {
       const result = await manhwaAPI.advancedSearch({
-        status: 'completed',
+        status: ['finished'],  // Must be array, 'finished' is the correct Comix.to status
         page: 1,
       });
       setCompletedManhwa(result.results.slice(0, 15));

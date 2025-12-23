@@ -136,7 +136,9 @@ export default function SearchBar({ initialQuery = '', onSearch }: SearchBarProp
                     </h4>
                     {manhwa.latestChapter && (
                       <p className="text-xs text-gray-500 truncate">
-                        {manhwa.latestChapter}
+                        {typeof manhwa.latestChapter === 'number' 
+                          ? `Ch. ${manhwa.latestChapter}` 
+                          : String(manhwa.latestChapter).replace('Chapter', 'Ch.')}
                       </p>
                     )}
                   </div>

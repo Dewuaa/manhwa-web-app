@@ -24,6 +24,9 @@ import {
   Calendar,
   MessageSquare,
   List,
+  ChevronDown,
+  ChevronUp,
+  Search,
 } from 'lucide-react';
 
 // Lazy load heavy components
@@ -45,7 +48,7 @@ import { useReadingHistory } from '@/hooks/useReadingHistory';
 import { DetailPageSkeleton } from '@/components/LoadingSkeleton';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { AddToListModal } from '@/components/AddToListModal';
-import { cleanDescription } from '@/lib/utils';
+import { cleanDescription, formatRelativeDate } from '@/lib/utils';
 import { ShareButton } from '@/components/ShareModal';
 
 // Mock function for Gemini AI (replace with actual service if available)
@@ -74,6 +77,9 @@ export default function ManhwaDetailPage() {
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
+  const [selectedScanGroup, setSelectedScanGroup] = useState<string>('all');
+  const [isScanGroupOpen, setIsScanGroupOpen] = useState(false);
 
   const { success } = useToast();
   const { trackView, trackBookmark } = useEngagement();
@@ -96,7 +102,7 @@ export default function ManhwaDetailPage() {
     try {
       setLoading(true);
       setError(null);
-      manhwaAPI.setProvider(Provider.MGEKO);
+      manhwaAPI.setProvider(Provider.COMIXTO);
 
       // Fetch manhwa info (cached by API layer)
       const info = await manhwaAPI.getManhwaInfo(decodeURIComponent(id));
@@ -104,32 +110,83 @@ export default function ManhwaDetailPage() {
       setManhwa(info);
       document.title = `${info.title} | Inkora`;
 
-      // Enrich metadata in background (non-blocking)
-      if (!info.genres?.length || !info.authors?.length) {
-        manhwaAPI
-          .enrichMetadata(info.title)
-          .then((enrichment) => {
-            if (enrichment) {
-              setManhwa((prev) => {
-                if (!prev) return prev;
-                return {
-                  ...prev,
-                  genres: prev.genres?.length ? prev.genres : enrichment.genres,
-                  authors: prev.authors?.length ? prev.authors : enrichment.authors,
-                  releaseDate: prev.releaseDate || enrichment.releaseDate,
-                };
-              });
-            }
-          })
-          .catch(() => {}); // Silently fail enrichment
-      }
+      // Enrich metadata in background (non-blocking) - tries AniList first
+      manhwaAPI
+        .enrichMetadata(info.title)
+        .then((enrichment) => {
+          if (enrichment) {
+            setManhwa((prev) => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                // Use enriched data if current is missing or is a placeholder like "Unknown" or "updating"
+                genres: prev.genres?.length ? prev.genres : enrichment.genres,
+                // Disabled: enrichment matching is unreliable - may match wrong manga
+                // authors: (prev.authors?.length && !['Unknown', 'updating', 'Updating', ''].includes(prev.authors[0])) 
+                //   ? prev.authors 
+                //   : (enrichment.authors?.length ? enrichment.authors : prev.authors),
+                // releaseDate: prev.releaseDate || enrichment.releaseDate,
+                // Keep original image - enrichment may match wrong manga
+                // image: enrichment.image || prev.image,
+                // Use better description from AniList if current is short
+                description: 
+                  (enrichment.description && enrichment.description.length > (prev.description?.length || 0))
+                    ? enrichment.description
+                    : prev.description,
+                // Add AniList rating if available
+                rating: enrichment.rating || prev.rating,
+                // Store AniList URL for linking (using altTitles array as workaround)
+                altTitles: enrichment.anilistUrl 
+                  ? [...(prev.altTitles || []), `anilist:${enrichment.anilistUrl}`]
+                  : prev.altTitles,
+              };
+            });
+          }
+        })
+        .catch(() => {}); // Silently fail enrichment
     } catch (err) {
+      console.error('[Manhwa Load] Failed to load manhwa:', err);
+      
+      // Try auto-migration if we have a saved title
+      try {
+        const history = JSON.parse(localStorage.getItem('manhwa_reading_history') || '[]');
+        const bookmarks = JSON.parse(localStorage.getItem('manhwa_bookmarks') || '[]');
+        const historyItem = history.find((h: { manhwaId: string }) => h.manhwaId === decodeURIComponent(id));
+        const bookmarkItem = bookmarks.find((b: { id: string }) => b.id === decodeURIComponent(id));
+        const savedTitle = historyItem?.manhwaTitle || bookmarkItem?.title;
+        
+        if (savedTitle) {
+          console.log(`[Migration] Attempting auto-migration for: "${savedTitle}"`);
+          
+          // Import and use migration service dynamically
+          const { tryMigrateByTitle } = await import('@/lib/migrationService');
+          const newId = await tryMigrateByTitle(decodeURIComponent(id), savedTitle);
+          
+          if (newId) {
+            console.log(`[Migration] Found new ID: ${newId}, redirecting...`);
+            // Update saved data with new ID
+            if (historyItem) {
+              historyItem.manhwaId = newId;
+              localStorage.setItem('manhwa_reading_history', JSON.stringify(history));
+            }
+            if (bookmarkItem) {
+              bookmarkItem.id = newId;
+              localStorage.setItem('manhwa_bookmarks', JSON.stringify(bookmarks));
+            }
+            // Redirect to new URL
+            router.replace(`/manhwa/${encodeURIComponent(newId)}`);
+            return;
+          }
+        }
+      } catch (migrationErr) {
+        console.error('[Migration] Auto-migration failed:', migrationErr);
+      }
+      
       setError('Failed to load manhwa details');
-      console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, router]);
 
   useEffect(() => {
     if (id) {
@@ -219,26 +276,121 @@ export default function ManhwaDetailPage() {
     });
   }, [manhwa, sortOrder]);
 
+  // Extract available scan groups from all chapters
+  const availableScanGroups = useMemo(() => {
+    if (!manhwa?.chapters) return [];
+    
+    const groupMap = new Map<string, { id: string; name: string }>();
+    
+    manhwa.chapters.forEach(chapter => {
+      // Add the main chapter's scan group
+      if (chapter.scanGroup) {
+        groupMap.set(String(chapter.scanGroup.id), {
+          id: String(chapter.scanGroup.id),
+          name: chapter.scanGroup.name
+        });
+      }
+      
+      // Add scan groups from versions
+      if (chapter.versions) {
+        chapter.versions.forEach(version => {
+          if (version.scanGroup) {
+            groupMap.set(String(version.scanGroup.id), {
+              id: String(version.scanGroup.id),
+              name: version.scanGroup.name
+            });
+          }
+        });
+      }
+    });
+    
+    return Array.from(groupMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [manhwa?.chapters]);
+
+  // Filter chapters based on selected scan group
+  const filteredChapters = useMemo(() => {
+    if (selectedScanGroup === 'all') return sortedChapters;
+    
+    return sortedChapters.map(chapter => {
+      // Check if main chapter matches
+      if (chapter.scanGroup && String(chapter.scanGroup.id) === selectedScanGroup) {
+        return chapter;
+      }
+      
+      // Check if any version matches and use that instead
+      if (chapter.versions) {
+        const matchingVersion = chapter.versions.find(
+          v => v.scanGroup && String(v.scanGroup.id) === selectedScanGroup
+        );
+        if (matchingVersion) {
+          return {
+            ...matchingVersion,
+            title: chapter.title, // Keep original title
+          };
+        }
+      }
+      
+      return null;
+    }).filter(Boolean);
+  }, [sortedChapters, selectedScanGroup]);
+
+  // Extract AniList URL from enrichment data (stored in altTitles with prefix)
+  const anilistUrl = useMemo(() => {
+    const anilistEntry = manhwa?.altTitles?.find(t => t.startsWith('anilist:'));
+    return anilistEntry ? anilistEntry.replace('anilist:', '') : null;
+  }, [manhwa?.altTitles]);
+
   if (loading) {
     return <DetailPageSkeleton />;
   }
 
   if (error || !manhwa) {
+    // Try to get the title from reading history or bookmarks for the error message
+    const savedTitle = typeof window !== 'undefined' 
+      ? (() => {
+          try {
+            const history = JSON.parse(localStorage.getItem('manhwa_reading_history') || '[]');
+            const bookmark = JSON.parse(localStorage.getItem('manhwa_bookmarks') || '[]');
+            const historyItem = history.find((h: { manhwaId: string }) => h.manhwaId === decodeURIComponent(id));
+            const bookmarkItem = bookmark.find((b: { id: string }) => b.id === decodeURIComponent(id));
+            return historyItem?.manhwaTitle || bookmarkItem?.title || null;
+          } catch {
+            return null;
+          }
+        })()
+      : null;
+
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4">
         <div className="text-center max-w-md">
           <div className="text-6xl mb-6">😔</div>
-          <h2 className="text-xl font-bold text-white mb-2">Manhwa Not Found</h2>
-          <p className="text-gray-400 mb-6">
-            {error || 'The manhwa you are looking for does not exist.'}
+          <h2 className="text-xl font-bold text-white mb-2">Content Not Available</h2>
+          <p className="text-gray-400 mb-4">
+            {savedTitle 
+              ? `"${savedTitle}" couldn't be loaded. It may have been moved or is no longer available.`
+              : error || 'The manhwa you are looking for does not exist.'}
           </p>
-          <Link
-            href="/"
-            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Back to Home
-          </Link>
+          <p className="text-gray-500 text-sm mb-6">
+            This might happen if you had this saved from a previous version of the app.
+          </p>
+          <div className="flex flex-col gap-3">
+            {savedTitle && (
+              <Link
+                href={`/browse?q=${encodeURIComponent(savedTitle)}`}
+                className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all"
+              >
+                <Search className="w-5 h-5 mr-2" />
+                Search for &quot;{savedTitle.slice(0, 30)}{savedTitle.length > 30 ? '...' : ''}&quot;
+              </Link>
+            )}
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center px-6 py-3 bg-white/10 text-white rounded-xl font-bold hover:bg-white/20 transition-all"
+            >
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -353,6 +505,21 @@ export default function ManhwaDetailPage() {
                   ? `In ${getManhwaLists(decodeURIComponent(id)).length} List${getManhwaLists(decodeURIComponent(id)).length > 1 ? 's' : ''}`
                   : 'Add to List'}
               </button>
+              {/* AniList Link */}
+              {anilistUrl && (
+                <a
+                  href={anilistUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full mt-3 h-12 rounded-xl font-bold flex items-center justify-center gap-2 border transition-all bg-[#02A9FF]/10 text-[#02A9FF] border-[#02A9FF]/30 hover:bg-[#02A9FF]/20"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 172 172" fill="currentColor">
+                    <path d="M120.396 55.732L99.477 116.319H81.052L63.604 55.732H81.052L90.264 96.421L99.477 55.732H120.396Z"/>
+                    <path d="M66.916 98.384C67.66 104.336 72.724 108.512 78.676 107.768C84.628 107.024 88.804 101.96 88.06 96.008C87.316 90.056 82.252 85.88 76.3 86.624C70.348 87.368 66.172 92.432 66.916 98.384Z"/>
+                  </svg>
+                  View on AniList
+                </a>
+              )}
             </div>
           </div>
 
@@ -660,15 +827,72 @@ export default function ManhwaDetailPage() {
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-white font-bold text-xl">Episodes</h3>
 
-                      {/* Filter & Count */}
-                      <div className="flex items-center gap-3 relative">
+                      {/* Scan Group Dropdown & Filter & Count */}
+                      <div className="flex items-center gap-2 md:gap-3 relative flex-wrap justify-end">
+                        {/* Scan Group Dropdown */}
+                        {availableScanGroups.length > 0 && (
+                          <div className="relative">
+                            <button
+                              onClick={() => setIsScanGroupOpen(!isScanGroupOpen)}
+                              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-sm font-medium ${
+                                selectedScanGroup !== 'all'
+                                  ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+                                  : 'text-gray-400 border-white/10 hover:text-white hover:bg-white/5'
+                              }`}
+                            >
+                              <span className="max-w-[100px] md:max-w-[150px] truncate">
+                                {selectedScanGroup === 'all' 
+                                  ? 'All Groups' 
+                                  : availableScanGroups.find(g => g.id === selectedScanGroup)?.name || 'All Groups'}
+                              </span>
+                              {isScanGroupOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </button>
+
+                            {isScanGroupOpen && (
+                              <>
+                                <div
+                                  className="fixed inset-0 z-10"
+                                  onClick={() => setIsScanGroupOpen(false)}
+                                />
+                                <div className="absolute right-0 top-full mt-2 w-52 bg-gray-900 border border-white/10 rounded-xl shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[300px] overflow-y-auto">
+                                  <div className="p-2 space-y-1">
+                                    <button
+                                      onClick={() => {
+                                        setSelectedScanGroup('all');
+                                        setIsScanGroupOpen(false);
+                                      }}
+                                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedScanGroup === 'all' ? 'bg-purple-600/10 text-purple-400' : 'text-gray-300 hover:bg-white/5'}`}
+                                    >
+                                      All Groups
+                                    </button>
+                                    <div className="h-px bg-white/5 my-1" />
+                                    {availableScanGroups.map((group) => (
+                                      <button
+                                        key={group.id}
+                                        onClick={() => {
+                                          setSelectedScanGroup(group.id);
+                                          setIsScanGroupOpen(false);
+                                        }}
+                                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedScanGroup === group.id ? 'bg-purple-600/10 text-purple-400' : 'text-gray-300 hover:bg-white/5'}`}
+                                      >
+                                        {group.name}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Sort Filter */}
                         <div className="relative">
                           <button
                             onClick={() => setIsFilterOpen(!isFilterOpen)}
                             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors px-3 py-1.5 hover:bg-white/5 rounded-lg border border-transparent hover:border-white/5"
                           >
                             <ListFilter size={18} />
-                            <span className="text-xs font-bold">Filter</span>
+                            <span className="text-xs font-bold hidden sm:inline">Sort</span>
                           </button>
 
                           {isFilterOpen && (
@@ -703,26 +927,19 @@ export default function ManhwaDetailPage() {
                           )}
                         </div>
                         <span className="text-sm text-gray-500 font-medium border-l border-white/10 pl-3">
-                          {manhwa.chapters.length} Total
+                          {filteredChapters.length} / {manhwa.chapters.length}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex flex-col gap-3">
-                      {sortedChapters.map((chapter) => {
+                      {filteredChapters.map((chapter: any) => {
                         const chapterId = String(chapter.id);
                         const manhwaIdDecoded = decodeURIComponent(id);
                         const progress = getChapterProgress(manhwaIdDecoded, chapterId);
                         const isRead = isChapterRead(manhwaIdDecoded, chapterId);
                         const chapterNum =
                           chapter.title?.match(/(\d+)/)?.[0] || chapter.id;
-
-                        // Debug logging
-                        if (progress > 0 || isRead) {
-                          console.log(
-                            `Chapter ${chapterId}: progress=${progress}, isRead=${isRead}`,
-                          );
-                        }
 
                         return (
                           <Link
@@ -749,10 +966,20 @@ export default function ManhwaDetailPage() {
                               <p className="font-bold text-base md:text-lg text-white group-hover:text-blue-400 transition-colors truncate">
                                 {chapter.title || `Chapter ${chapter.id}`}
                               </p>
-                              <div className="flex items-center gap-2 mt-1.5">
+                              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                 <p className="text-gray-500 text-xs md:text-sm font-medium">
-                                  {chapter.releaseDate || 'Just now'}
+                                  {formatRelativeDate(chapter.releaseDate)}
                                 </p>
+
+                                {/* Scan Group Badge */}
+                                {chapter.scanGroup && (
+                                  <>
+                                    <span className="w-1 h-1 rounded-full bg-gray-600" />
+                                    <span className="text-purple-400 text-xs font-semibold bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20">
+                                      {chapter.scanGroup.name}
+                                    </span>
+                                  </>
+                                )}
 
                                 {/* Status Indicators */}
                                 {isRead ? (

@@ -1,5 +1,4 @@
 import React from 'react';
-import { Star } from 'lucide-react';
 import { ManhwaLink } from '../ManhwaLink';
 import { Manhwa } from '@/lib/types';
 import ImageWithFallback from '../ImageWithFallback';
@@ -34,33 +33,27 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manhwa, rank }) => {
           </div>
         )}
 
+
+        {/* Chapter number at bottom - like Comix.to */}
         <div className="absolute bottom-3 left-3 right-3">
-          {/* Only show rating if it exists and is not null/undefined, otherwise show chapter */}
-          {manhwa.rating != null && manhwa.rating !== 'N/A' ? (
-            <div className="flex items-center gap-1.5 text-yellow-400 text-xs font-bold mb-1">
-              <Star size={12} fill="currentColor" />
-              {typeof manhwa.rating === 'number'
-                ? manhwa.rating.toFixed(1)
-                : manhwa.rating}
-            </div>
-          ) : manhwa.latestChapter && manhwa.latestChapter !== 'Unknown' ? (
+          {manhwa.latestChapter && manhwa.latestChapter !== 'Unknown' ? (
             <div className="text-blue-400 text-xs font-bold mb-1 truncate">
-              {manhwa.latestChapter}
+              {typeof manhwa.latestChapter === 'number' 
+                ? `Ch. ${manhwa.latestChapter}`
+                : String(manhwa.latestChapter).replace('Chapter', 'Ch.')}
             </div>
           ) : null}
         </div>
       </div>
-      <div>
-        <h3 className="text-gray-100 font-semibold sm:font-bold text-xs sm:text-sm leading-tight line-clamp-2 group-hover:text-blue-400 transition-colors">
+      <div className="px-0.5">
+        <h3 className="text-gray-100 font-semibold text-xs sm:text-sm leading-snug line-clamp-1 group-hover:text-blue-400 transition-colors">
           {manhwa.title}
         </h3>
-        <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5 sm:mt-1 font-medium truncate">
-          {manhwa.genres?.[0] ||
-            (manhwa.latestChapter && manhwa.latestChapter !== 'Unknown'
-              ? manhwa.latestChapter
-              : null)}
-          {manhwa.status && manhwa.status !== 'Unknown' && <> • {manhwa.status}</>}
-        </p>
+        {manhwa.status && manhwa.status !== 'Unknown' && (
+          <p className="text-gray-500 text-[10px] mt-0.5 font-medium capitalize">
+            {manhwa.status.replace('_', ' ')}
+          </p>
+        )}
       </div>
     </ManhwaLink>
   );

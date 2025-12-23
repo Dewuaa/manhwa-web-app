@@ -212,11 +212,11 @@ export default function BookmarksPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredBookmarks.map((bookmark) => {
+            {filteredBookmarks.map((bookmark, index) => {
               const progress = getBookmarkProgress(bookmark.id);
               return (
                 <motion.div
-                  key={bookmark.id}
+                  key={`${bookmark.id}-${index}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   onClick={() => {

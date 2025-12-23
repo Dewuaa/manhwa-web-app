@@ -210,6 +210,19 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'web-production-2840b.up.railway.app',
       },
+      // Comix.to
+      {
+        protocol: 'https',
+        hostname: 'comix.to',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.comix.to',
+      },
+      {
+        protocol: 'https',
+        hostname: 'static.comix.to',
+      },
     ],
     qualities: [75, 90],
   },

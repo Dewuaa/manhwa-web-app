@@ -91,7 +91,9 @@ export default function HeroCarousel({ manhwaList }: HeroCarouselProps) {
                 {featured[currentIndex].latestChapter && (
                   <span className="flex items-center bg-white/10 px-3 py-1.5 rounded-lg backdrop-blur-md border border-white/5">
                     <BookOpen className="w-4 h-4 mr-2 text-primary" />
-                    {featured[currentIndex].latestChapter}
+                    {typeof featured[currentIndex].latestChapter === 'number' 
+                      ? `Ch. ${featured[currentIndex].latestChapter}` 
+                      : String(featured[currentIndex].latestChapter).replace('Chapter', 'Ch.')}
                   </span>
                 )}
                 <span className="flex items-center bg-white/10 px-3 py-1.5 rounded-lg backdrop-blur-md border border-white/5">

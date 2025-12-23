@@ -64,7 +64,9 @@ export const FreshUpdates: React.FC<FreshUpdatesProps> = ({ manhwaList, loading 
               </div>
               <p className="text-blue-400 text-[11px] sm:text-xs font-medium mt-0.5 sm:mt-1">
                 {manga.latestChapter && manga.latestChapter !== 'Unknown'
-                  ? manga.latestChapter
+                  ? typeof manga.latestChapter === 'number' 
+                    ? `Ch. ${manga.latestChapter}`
+                    : String(manga.latestChapter).replace('Chapter', 'Ch.')
                   : 'New Update'}
               </p>
               {/* Tags are not available in list view usually, so we might skip or use status */}

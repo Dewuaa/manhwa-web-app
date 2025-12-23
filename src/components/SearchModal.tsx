@@ -40,13 +40,17 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const { data: genresData } = useGenres();
   const genres = genresData || [];
 
-  // Fetch trending manhwa on mount
+  // Fetch trending manhwa on mount (7-day trending from Comix.to)
   useEffect(() => {
     if (isOpen && trendingManhwa.length === 0) {
       const fetchTrending = async () => {
         setLoadingTrending(true);
         try {
-          const results = await manhwaAPI.getLatestManhwa(1);
+          // Use advancedSearch with views_7d sort for actual trending
+          const results = await manhwaAPI.advancedSearch({
+            sort: 'views_7d',
+            page: 1,
+          });
           setTrendingManhwa(results.results.slice(0, 5));
         } catch (error) {
           console.error('Failed to fetch trending:', error);
@@ -117,6 +121,16 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     onClose();
   };
 
+  // Navigate to browse page with search query
+  const handleViewAllResults = () => {
+    if (query.trim()) {
+      addToHistory(query);
+      // Use browse page which has all the filtering capabilities
+      router.push(`/browse?q=${encodeURIComponent(query.trim())}`);
+      onClose();
+    }
+  };
+
   const handleFilterClick = (slug: string) => {
     if (activeFilter === slug) {
       setActiveFilter(null);
@@ -132,12 +146,17 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       if (e.key === 'Escape') {
         onClose();
       }
+      // Enter key navigates to full search results
+      if (e.key === 'Enter' && (query.trim() || activeFilter)) {
+        e.preventDefault();
+        handleViewAllResults();
+      }
     };
     if (isOpen) {
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, query, activeFilter]);
 
   if (!isOpen) return null;
 
@@ -175,43 +194,17 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         </div>
         <button
           type="button"
-          onClick={onClose}
+          onClick={() => {
+            onClose();
+            // If on /search page, go back to home
+            if (window.location.pathname === '/search') {
+              router.push('/');
+            }
+          }}
           className="text-gray-400 hover:text-white font-medium text-sm md:text-base px-3 py-1.5 hover:bg-white/5 rounded-lg transition-colors"
         >
           Cancel
         </button>
-      </div>
-
-      {/* Filter Chips */}
-      <div className="py-4 border-b border-white/5">
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar px-4 md:px-6">
-          <button
-            type="button"
-            onClick={() => setActiveFilter(null)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all border ${
-              activeFilter === null
-                ? 'bg-red-600 text-white border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]'
-                : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            <TrendingUp size={14} /> All
-          </button>
-          {genres.slice(0, 15).map((genre) => (
-            <button
-              key={genre.slug}
-              type="button"
-              onClick={() => handleFilterClick(genre.slug)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all border ${
-                activeFilter === genre.slug
-                  ? 'bg-red-600 text-white border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]'
-                  : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              {activeFilter === genre.slug ? <Hash size={14} /> : null}
-              {genre.name}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Results Area */}
@@ -283,11 +276,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                           <span className="text-gray-500 text-xs">
                             {manhwa.status || 'Manhwa'}
                           </span>
-                          <span className="text-gray-600">•</span>
-                          <div className="flex items-center gap-1">
-                            <Star size={12} className="text-amber-400 fill-amber-400" />
-                            <span className="text-gray-400 text-xs font-medium">4.9</span>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -318,21 +306,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
               </div>
             )}
 
-            <div className="mt-10">
-              <h3 className="text-white font-bold text-lg mb-4">Popular Tags</h3>
-              <div className="flex flex-wrap gap-2">
-                {genres.slice(0, 12).map((genre) => (
-                  <button
-                    key={genre.slug}
-                    type="button"
-                    onClick={() => handleFilterClick(genre.slug)}
-                    className="px-4 py-2 bg-white/5 hover:bg-red-600/20 text-gray-300 hover:text-red-400 rounded-full text-sm font-medium border border-white/5 hover:border-red-500/30 transition-all"
-                  >
-                    # {genre.name}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 
@@ -358,18 +331,12 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   <h4 className="text-white font-bold text-base sm:text-lg leading-tight line-clamp-2 group-hover:text-red-400 transition-colors">
                     {manhwa.title}
                   </h4>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-gray-500 text-xs">
-                      {manhwa.status || 'Ongoing'}
-                    </span>
-                    <span className="text-gray-600">•</span>
-                    <div className="flex items-center gap-1">
-                      <Star size={12} className="text-amber-400 fill-amber-400" />
-                      <span className="text-gray-400 text-xs font-medium">4.8</span>
-                    </div>
-                  </div>
                   <p className="text-gray-500 text-xs mt-1 truncate">
-                    {manhwa.latestChapter || 'Latest Chapter'}
+                    {manhwa.latestChapter 
+                      ? typeof manhwa.latestChapter === 'number' 
+                        ? `Ch. ${manhwa.latestChapter}` 
+                        : String(manhwa.latestChapter).replace('Chapter', 'Ch.')
+                      : 'Latest Chapter'}
                   </p>
                 </div>
                 <div className="flex flex-col items-end justify-center">
@@ -379,6 +346,17 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 </div>
               </div>
             ))}
+            
+            {/* View All Results Button */}
+            {searchResults.length > 0 && query.trim() && (
+              <button
+                onClick={handleViewAllResults}
+                className="w-full mt-4 py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-500/20 hover:shadow-red-500/30"
+              >
+                View All Results for &quot;{query}&quot;
+                <ChevronRight size={18} />
+              </button>
+            )}
           </div>
         )}
 

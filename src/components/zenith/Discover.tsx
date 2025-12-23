@@ -263,7 +263,11 @@ export const Discover: React.FC<DiscoverProps> = ({ topManhwa = [], loading }) =
                       {manga.title}
                     </h3>
                     <p className="text-gray-400 text-xs mb-2 truncate">
-                      {manga.latestChapter || 'Latest chapter'}
+                      {manga.latestChapter 
+                        ? typeof manga.latestChapter === 'number' 
+                          ? `Ch. ${manga.latestChapter}` 
+                          : String(manga.latestChapter).replace('Chapter', 'Ch.')
+                        : 'Latest chapter'}
                     </p>
                     <div className="mt-auto flex items-center gap-3 text-xs font-medium text-gray-500">
                       {manga.rating && (

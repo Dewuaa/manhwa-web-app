@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { manhwaAPI, getProxiedImageUrl } from '@/lib/api';
+import { manhwaAPI } from '@/lib/api';
+import ReaderImage from '@/components/ReaderImage';
 import { ChapterPage, Provider, ManhwaInfo } from '@/lib/types';
 import {
   ArrowLeft,
@@ -415,7 +416,7 @@ export default function ChapterReaderPage({ params }: PageProps) {
   // Logic: Load Manhwa Info
   const loadManhwaInfo = async () => {
     try {
-      manhwaAPI.setProvider(Provider.MGEKO);
+      manhwaAPI.setProvider(Provider.COMIXTO);
       const info = await manhwaAPI.getManhwaInfo(decodeURIComponent(manhwaId));
       setManhwaInfo(info);
 
@@ -445,7 +446,7 @@ export default function ChapterReaderPage({ params }: PageProps) {
     try {
       setLoading(true);
       setError(null);
-      manhwaAPI.setProvider(Provider.MGEKO);
+      manhwaAPI.setProvider(Provider.COMIXTO);
       const decodedChapterId = decodeURIComponent(chapterId);
       // Pass the source provider from manhwaInfo if available
       const sourceProvider = manhwaInfo?.provider;
@@ -711,15 +712,12 @@ export default function ChapterReaderPage({ params }: PageProps) {
             className={`mx-auto bg-black min-h-full shadow-2xl transition-all duration-300 ${imageFit === 'contained' ? 'max-w-2xl border-x border-white/5' : 'w-full'}`}
           >
             {pages.map((page, index) => (
-              <div key={index} className="w-full relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={getProxiedImageUrl(page.img)}
-                  alt={`Page ${index + 1}`}
-                  className="w-full h-auto block select-none"
-                  loading={index < 5 ? 'eager' : 'lazy'}
-                />
-              </div>
+              <ReaderImage
+                key={index}
+                src={page.img}
+                alt={`Page ${index + 1}`}
+                priority={index < 3}
+              />
             ))}
 
             {/* Next Chapter Button at bottom */}
@@ -775,11 +773,11 @@ export default function ChapterReaderPage({ params }: PageProps) {
                 className="h-full flex items-center justify-center p-4"
               >
                 {pages[currentPageIndex] && (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={getProxiedImageUrl(pages[currentPageIndex].img)}
+                  <ReaderImage
+                    src={pages[currentPageIndex].img}
                     alt={`Page ${currentPageIndex + 1}`}
-                    className={`max-h-full w-auto h-auto object-contain select-none ${imageFit === 'full' ? 'max-w-none' : 'max-w-2xl'}`}
+                    priority={true}
+                    className={`max-h-full w-auto h-auto object-contain ${imageFit === 'full' ? 'max-w-none' : 'max-w-2xl'}`}
                   />
                 )}
               </motion.div>

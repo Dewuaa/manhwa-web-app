@@ -76,7 +76,11 @@ export default function RecentlyUpdated({ manhwaList }: RecentlyUpdatedProps) {
                   {manhwa.latestChapter && (
                     <div className="flex items-center gap-1 text-xs text-blue-400 mb-1">
                       <ChevronRight className="w-3 h-3" />
-                      <span className="truncate">{manhwa.latestChapter}</span>
+                      <span className="truncate">
+                        {typeof manhwa.latestChapter === 'number' 
+                          ? `Ch. ${manhwa.latestChapter}` 
+                          : String(manhwa.latestChapter).replace('Chapter', 'Ch.')}
+                      </span>
                     </div>
                   )}
 

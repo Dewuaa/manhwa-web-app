@@ -64,3 +64,35 @@ export function cleanDescription(description: string | undefined | null): string
 
   return cleaned;
 }
+
+/**
+ * Format a date string to relative time (e.g., "2d ago", "3h ago")
+ */
+export function formatRelativeDate(dateString: string | null | undefined): string {
+  if (!dateString) return 'Just now';
+  
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    
+    if (diffMs < 0) return 'Just now'; // Future dates
+    
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffWeeks = Math.floor(diffDays / 7);
+    const diffMonths = Math.floor(diffDays / 30);
+    const diffYears = Math.floor(diffDays / 365);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffWeeks < 4) return `${diffWeeks}w ago`;
+    if (diffMonths < 12) return `${diffMonths}mo ago`;
+    return `${diffYears}y ago`;
+  } catch {
+    return dateString; // Return original if parsing fails
+  }
+}

@@ -251,7 +251,7 @@ export function BadgesDisplay() {
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 border border-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                 <p className="text-sm font-medium text-white">{badge.name}</p>
                 <p className="text-xs text-gray-400">{badge.description}</p>
-                {isEarned && badge.earnedAt && (
+                {isEarned && badge.earnedAt && !isNaN(new Date(badge.earnedAt).getTime()) && (
                   <p className="text-xs text-yellow-400 mt-1">
                     <Calendar className="w-3 h-3 inline mr-1" />
                     Earned {new Date(badge.earnedAt).toLocaleDateString()}

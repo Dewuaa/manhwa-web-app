@@ -34,15 +34,19 @@ function ImageWithFallbackComponent({
 
   // Auto-proxy images from protected domains
   const processedSrc = useMemo(() => {
-    if (!src || typeof src !== 'string') return src;
+    if (!src || typeof src !== 'string' || src.trim() === '') return null;
     if (needsProxy) {
       return getProxiedImageUrl(src);
     }
     return src;
   }, [src, needsProxy]);
 
-  if (error) {
-    if (fallbackSrc) {
+  // Immediately show fallback for empty/invalid src
+  const hasValidSrc = processedSrc && typeof processedSrc === 'string' && processedSrc.trim() !== '';
+
+  // Show fallback for empty src or error
+  if (!hasValidSrc || error) {
+    if (fallbackSrc && !error) {
       return (
         <Image
           {...props}
@@ -60,7 +64,7 @@ function ImageWithFallbackComponent({
     return (
       <div
         className={`flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 ${className}`}
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%', height: '100%', position: fill ? 'absolute' : 'relative' }}
       >
         {showIcon && (
           <div className="flex flex-col items-center justify-center p-4">
