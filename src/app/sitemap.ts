@@ -1,6 +1,36 @@
 import { MetadataRoute } from 'next';
 
 const BASE_URL = 'https://inkora.spacely.tech';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'https://web-production-2840b.up.railway.app';
+
+// Fetch popular/trending manga IDs for sitemap
+async function fetchMangaIds(): Promise<string[]> {
+  try {
+    // Fetch multiple pages of trending manga to get more IDs
+    const pages = [1, 2, 3];
+    const allIds: string[] = [];
+
+    for (const page of pages) {
+      const response = await fetch(
+        `${API_BASE_URL}/manhwa/comixto/trending?page=${page}&type=manhwa,manhua`,
+        { next: { revalidate: 86400 } } // Cache for 24 hours
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const results = data.results || [];
+        allIds.push(...results.map((m: { id: string }) => m.id));
+      }
+    }
+
+    // Return unique IDs
+    return [...new Set(allIds)];
+  } catch (error) {
+    console.error('Failed to fetch manga IDs for sitemap:', error);
+    return [];
+  }
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static pages
@@ -28,6 +58,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/browse`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9,
     },
     {
       url: `${BASE_URL}/disclaimer`,
@@ -95,5 +131,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...genrePages];
+  // Dynamic manga pages from trending
+  const mangaIds = await fetchMangaIds();
+  const mangaPages: MetadataRoute.Sitemap = mangaIds.map((id) => ({
+    url: `${BASE_URL}/manhwa/${encodeURIComponent(id)}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.8,
+  }));
+
+  return [...staticPages, ...genrePages, ...mangaPages];
 }
+
