@@ -78,8 +78,22 @@ export default function ManhwaDetailPage() {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
-  const [selectedScanGroup, setSelectedScanGroup] = useState<string>('all');
+  // Initialize scan group from sessionStorage (persists while navigating to reader and back)
+  const [selectedScanGroup, setSelectedScanGroup] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem(`scanGroup_${id}`);
+      return saved || 'all';
+    }
+    return 'all';
+  });
   const [isScanGroupOpen, setIsScanGroupOpen] = useState(false);
+
+  // Persist scan group selection to sessionStorage
+  useEffect(() => {
+    if (id) {
+      sessionStorage.setItem(`scanGroup_${id}`, selectedScanGroup);
+    }
+  }, [id, selectedScanGroup]);
 
   const { success } = useToast();
   const { trackView, trackBookmark } = useEngagement();
