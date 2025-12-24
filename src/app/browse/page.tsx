@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { manhwaAPI, AdvancedSearchOptions } from '@/lib/api';
 import { Manhwa } from '@/lib/types';
-import { MangaCard } from '@/components/zenith/MangaCard';
+import ManhwaCard from '@/components/ManhwaCard';
 import { useDebounce } from '@/hooks/useDebounce';
 
 // Filter options
@@ -133,6 +133,7 @@ function BrowsePageContent() {
   const [yearFrom, setYearFrom] = useState<string>('');
   const [yearTo, setYearTo] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('follows');
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
   // Read URL query parameter on mount
   useEffect(() => {
@@ -574,18 +575,44 @@ function BrowsePageContent() {
           {/* Sort & Results Count */}
           <div className="flex items-center justify-between mt-3">
             <div className="flex items-center gap-2 text-xs md:text-sm text-gray-400">
-              <span>Sort:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-white focus:outline-none text-xs md:text-sm"
-              >
-                {SORT_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value} className="bg-gray-900">
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <button
+                  onClick={() => setShowSortMenu(!showSortMenu)}
+                  className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs md:text-sm hover:bg-white/10 transition-colors"
+                >
+                  <span className="text-gray-400">Sort:</span>
+                  <span className="font-medium">{SORT_OPTIONS.find(o => o.value === sortBy)?.label}</span>
+                  <ChevronDown size={14} className={`text-gray-400 transition-transform ${showSortMenu ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {showSortMenu && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-30" 
+                      onClick={() => setShowSortMenu(false)}
+                    />
+                    <div className="absolute left-0 top-full mt-2 w-48 bg-gray-900 border border-white/10 rounded-xl shadow-2xl z-40 overflow-hidden py-1">
+                      {SORT_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => {
+                            setSortBy(opt.value);
+                            setShowSortMenu(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                            sortBy === opt.value
+                              ? 'bg-blue-600/10 text-blue-400 font-medium'
+                              : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
             
             {totalResults > 0 && (
@@ -599,7 +626,7 @@ function BrowsePageContent() {
 
       {/* Mobile Filter Modal */}
       {showFilters && (
-        <div className="md:hidden fixed inset-0 z-50 bg-black/80" onClick={() => setShowFilters(false)}>
+        <div className="md:hidden fixed inset-0 z-[60] bg-black/80" onClick={() => setShowFilters(false)}>
           <div 
             className="absolute bottom-0 left-0 right-0 bg-gray-900 rounded-t-3xl max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
@@ -607,12 +634,20 @@ function BrowsePageContent() {
             {/* Header */}
             <div className="sticky top-0 z-10 bg-gray-900 px-4 py-4 border-b border-white/10 flex items-center justify-between">
               <h2 className="font-bold text-white text-lg">Filters</h2>
-              <button 
-                onClick={() => setShowFilters(false)}
-                className="p-2 text-gray-400 hover:text-white rounded-lg bg-white/5"
-              >
-                <X size={20} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={resetFilters}
+                  className="px-3 py-1.5 text-xs font-semibold text-gray-400 hover:text-white border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
+                >
+                  Reset
+                </button>
+                <button 
+                  onClick={() => setShowFilters(false)}
+                  className="p-2 text-gray-400 hover:text-white rounded-lg bg-white/5"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
             
             {/* Content */}
@@ -621,16 +656,10 @@ function BrowsePageContent() {
             </div>
             
             {/* Fixed Bottom Buttons */}
-            <div className="sticky bottom-0 bg-gray-900 border-t border-white/10 p-4 flex gap-3">
-              <button
-                onClick={resetFilters}
-                className="px-5 py-3 bg-white/10 text-white font-semibold rounded-xl"
-              >
-                Reset
-              </button>
+            <div className="sticky bottom-0 bg-gray-900 border-t border-white/10 p-4">
               <button
                 onClick={() => { applyFilters(); setShowFilters(false); }}
-                className="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl"
+                className="w-full bg-blue-600 active:scale-95 text-white font-bold py-3.5 rounded-xl text-base shadow-lg shadow-blue-600/20"
               >
                 Show Results
               </button>
@@ -658,13 +687,19 @@ function BrowsePageContent() {
               <div className="text-center py-16 md:py-20 text-gray-500">
                 <BookOpen className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 opacity-50" />
                 <p className="text-base md:text-lg">No results found</p>
-                <p className="text-xs md:text-sm mt-1 md:mt-2">Try adjusting your filters</p>
+                <p className="text-xs md:text-sm mt-1 md:mt-2 mb-6">Try adjusting your filters</p>
+                <button
+                  onClick={resetFilters}
+                  className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg transition-colors text-sm"
+                >
+                  Clear Filters
+                </button>
               </div>
             ) : (
               <>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
                   {results.map((manga) => (
-                    <MangaCard key={manga.id} manhwa={manga} />
+                    <ManhwaCard key={manga.id} manhwa={manga} />
                   ))}
                 </div>
 

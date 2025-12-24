@@ -430,7 +430,7 @@ export default function ManhwaDetailPage() {
       >
         <button
           onClick={handleBack}
-          className="p-2 sm:p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors border border-white/5 active:scale-95"
+          className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors border border-white/5 active:scale-95"
         >
           <ArrowLeft className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
         </button>
@@ -442,7 +442,7 @@ export default function ManhwaDetailPage() {
         <div className="flex gap-2 sm:gap-3">
           <button
             onClick={handleBookmarkToggle}
-            className={`p-2 sm:p-2.5 rounded-full transition-colors border border-white/5 active:scale-95 ${bookmarked ? 'bg-blue-600 text-white' : 'bg-white/10 backdrop-blur-md text-white hover:bg-white/20'}`}
+            className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors border border-white/5 active:scale-95 ${bookmarked ? 'bg-blue-600 text-white' : 'bg-white/10 backdrop-blur-md text-white hover:bg-white/20'}`}
           >
             <Heart
               className="w-[18px] h-[18px] sm:w-5 sm:h-5"
@@ -451,7 +451,7 @@ export default function ManhwaDetailPage() {
           </button>
           <button
             onClick={() => setIsListModalOpen(true)}
-            className={`p-2 sm:p-2.5 rounded-full transition-colors border border-white/5 active:scale-95 ${
+            className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors border border-white/5 active:scale-95 ${
               getManhwaLists(decodeURIComponent(id)).length > 0
                 ? 'bg-purple-600 text-white'
                 : 'bg-white/10 backdrop-blur-md text-white hover:bg-white/20'
@@ -463,7 +463,7 @@ export default function ManhwaDetailPage() {
             manhwaId={decodeURIComponent(id)}
             manhwaTitle={manhwa.title}
             variant="icon"
-            className="p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors border border-white/5"
+            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors border border-white/5"
           />
         </div>
       </div>

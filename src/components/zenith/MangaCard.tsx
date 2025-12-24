@@ -37,7 +37,7 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manhwa, rank }) => {
         {/* Chapter number at bottom - like Comix.to */}
         <div className="absolute bottom-3 left-3 right-3">
           {manhwa.latestChapter && manhwa.latestChapter !== 'Unknown' ? (
-            <div className="text-blue-400 text-xs font-bold mb-1 truncate">
+            <div className="text-blue-400 text-xs font-bold mb-1 truncate drop-shadow-md">
               {typeof manhwa.latestChapter === 'number' 
                 ? `Ch. ${manhwa.latestChapter}`
                 : String(manhwa.latestChapter).replace('Chapter', 'Ch.')}
@@ -46,7 +46,7 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manhwa, rank }) => {
         </div>
       </div>
       <div className="px-0.5">
-        <h3 className="text-gray-100 font-semibold text-xs sm:text-sm leading-snug line-clamp-1 group-hover:text-blue-400 transition-colors">
+        <h3 className="text-gray-100 font-semibold text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-blue-400 transition-colors">
           {manhwa.title}
         </h3>
         {manhwa.status && manhwa.status !== 'Unknown' && (
