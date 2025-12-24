@@ -71,35 +71,51 @@ export default function ProfilePage() {
 
   // Calculate reading stats when history changes
   useEffect(() => {
-    const bookmarks = getBookmarks();
-    const uniqueManhwa = new Set(history.map((h) => h.manhwaId));
-    const completedChapters = history.reduce(
-      (acc, h) => acc + (h.chaptersRead?.length || 0),
-      0,
-    );
-
-    // Calculate streak (simplified - days with reading activity)
-    const today = new Date();
-    let streak = 0;
-    const sortedHistory = [...history].sort((a, b) => b.timestamp - a.timestamp);
-
-    if (sortedHistory.length > 0) {
-      const lastRead = new Date(sortedHistory[0].timestamp);
-      const daysDiff = Math.floor(
-        (today.getTime() - lastRead.getTime()) / (1000 * 60 * 60 * 24),
+    try {
+      const bookmarks = getBookmarks();
+      const uniqueManhwa = new Set(history.map((h) => h.manhwaId));
+      const completedChapters = history.reduce(
+        (acc, h) => acc + (h.chaptersRead?.length || 0),
+        0,
       );
-      if (daysDiff <= 1) {
-        streak = Math.min(history.length, 7); // Cap at 7 for display
-      }
-    }
 
-    setStats({
-      totalChaptersRead: completedChapters,
-      totalManhwaRead: uniqueManhwa.size,
-      totalBookmarks: bookmarks.length,
-      readingStreak: streak,
-    });
+      // Calculate streak (simplified - days with reading activity)
+      const today = new Date();
+      let streak = 0;
+      const sortedHistory = [...history]
+        .filter((h) => h.timestamp && typeof h.timestamp === 'number' && !isNaN(h.timestamp))
+        .sort((a, b) => b.timestamp - a.timestamp);
+
+      if (sortedHistory.length > 0 && sortedHistory[0].timestamp) {
+        const lastRead = new Date(sortedHistory[0].timestamp);
+        if (!isNaN(lastRead.getTime())) {
+          const daysDiff = Math.floor(
+            (today.getTime() - lastRead.getTime()) / (1000 * 60 * 60 * 24),
+          );
+          if (daysDiff <= 1) {
+            streak = Math.min(history.length, 7); // Cap at 7 for display
+          }
+        }
+      }
+
+      setStats({
+        totalChaptersRead: completedChapters,
+        totalManhwaRead: uniqueManhwa.size,
+        totalBookmarks: bookmarks.length,
+        readingStreak: streak,
+      });
+    } catch (error) {
+      console.error('Error calculating reading stats:', error);
+      // Set defaults on error
+      setStats({
+        totalChaptersRead: 0,
+        totalManhwaRead: 0,
+        totalBookmarks: 0,
+        readingStreak: 0,
+      });
+    }
   }, [history]);
+
 
   const updateSetting = (key: string, value: boolean) => {
     localStorage.setItem(key, String(value));
