@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import ManhwaDetailPage from './ManhwaClientPage';
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'https://web-production-2840b.up.railway.app';
+  process.env.NEXT_PUBLIC_API_URL || 'https://web-production-1f437.up.railway.app';
 
 // Server-side fetch function for metadata
 async function getManhwaInfo(id: string) {
