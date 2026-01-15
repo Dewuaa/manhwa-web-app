@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 
 const BASE_URL = 'https://inkora.spacely.tech';
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'https://web-production-1f437.up.railway.app';
+  process.env.NEXT_PUBLIC_API_URL || 'https://determined-meris-inkora-f9b56664.koyeb.app';
 
 // Fetch popular/trending manga IDs for sitemap
 async function fetchMangaIds(): Promise<string[]> {
