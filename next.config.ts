@@ -16,213 +16,43 @@ const nextConfig: NextConfig = {
     // This saves you from Vercel's image optimization limits!
     unoptimized: isCloudflare,
     remotePatterns: [
-      // API proxy (for images with hotlink protection)
-      {
-        protocol: 'https',
-        hostname: 'web-production-2840b.up.railway.app',
-      },
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-      },
-      {
-        protocol: 'https',
-        hostname: 'gg.asuracomic.net',
-      },
-      {
-        protocol: 'https',
-        hostname: 'asuracomic.net',
-      },
-      {
-        protocol: 'https',
-        hostname: 'weebcentral.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.weebcentral.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'terna.compaci88.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'temp.compsci88.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.compsci88.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'hot.planeptune.us',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.planeptune.us',
-      },
-      {
-        protocol: 'https',
-        hostname: 'official.lowee.us',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.lowee.us',
-      },
-      // 2xstorage CDN
-      {
-        protocol: 'https',
-        hostname: 'img-r1.2xstorage.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.2xstorage.com',
-      },
-      // ComicK image CDNs
-      {
-        protocol: 'https',
-        hostname: 'comick.art',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.comick.art',
-      },
-      {
-        protocol: 'https',
-        hostname: 'meo.comick.pictures',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.comick.pictures',
-      },
-      {
-        protocol: 'https',
-        hostname: 'comicknew.pictures',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.comicknew.pictures',
-      },
+      // Localhost for development
+      { protocol: 'http', hostname: 'localhost' },
+      { protocol: 'http', hostname: 'localhost', port: '3000' },
+      // Railway API
+      { protocol: 'https', hostname: 'web-production-2840b.up.railway.app' },
+      // Asura Comics
+      { protocol: 'https', hostname: '**.asuracomic.net' },
+      // WeebCentral
+      { protocol: 'https', hostname: '**.weebcentral.com' },
+      // ComicK CDNs
+      { protocol: 'https', hostname: '**.compsci88.com' },
+      { protocol: 'https', hostname: '**.planeptune.us' },
+      { protocol: 'https', hostname: '**.lowee.us' },
+      { protocol: 'https', hostname: '**.2xstorage.com' },
+      { protocol: 'https', hostname: '**.comick.art' },
+      { protocol: 'https', hostname: '**.comick.pictures' },
+      { protocol: 'https', hostname: '**.comicknew.pictures' },
       // MangaDex
-      {
-        protocol: 'https',
-        hostname: 'mangadex.org',
-      },
-      {
-        protocol: 'https',
-        hostname: 'uploads.mangadex.org',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.mangadex.org',
-      },
+      { protocol: 'https', hostname: '**.mangadex.org' },
       // ManhuaPlus
-      {
-        protocol: 'https',
-        hostname: 'manhuaplus.top',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.manhuaplus.top',
-      },
-      {
-        protocol: 'https',
-        hostname: 'manhuaplus.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.manhuaplus.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'cdn.manhuaplus.us',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.manhuaplus.us',
-      },
-      {
-        protocol: 'https',
-        hostname: 'cdn.manhuaplus.cc',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.manhuaplus.cc',
-      },
-      // ManhuaUS (legacy - for old bookmarks)
-      {
-        protocol: 'https',
-        hostname: 'manhuaus.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.manhuaus.com',
-      },
+      { protocol: 'https', hostname: '**.manhuaplus.top' },
+      { protocol: 'https', hostname: '**.manhuaplus.com' },
+      { protocol: 'https', hostname: '**.manhuaplus.us' },
+      { protocol: 'https', hostname: '**.manhuaplus.cc' },
+      // ManhuaUS (legacy)
+      { protocol: 'https', hostname: '**.manhuaus.com' },
       // Mgeko
-      {
-        protocol: 'https',
-        hostname: 'mgeko.cc',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.mgeko.cc',
-      },
-      {
-        protocol: 'https',
-        hostname: 'mgeko.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.mgeko.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'mgeko4.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.mgeko4.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'imgsrv4.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.imgsrv4.com',
-      },
-      // Supabase Storage (avatars)
-      {
-        protocol: 'https',
-        hostname: 'rekqzsbvvralruplvpve.supabase.co',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.supabase.co',
-      },
-      // API Proxy (for image proxying)
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '3000',
-      },
-      {
-        protocol: 'https',
-        hostname: 'web-production-2840b.up.railway.app',
-      },
+      { protocol: 'https', hostname: '**.mgeko.cc' },
+      { protocol: 'https', hostname: '**.mgeko.com' },
+      { protocol: 'https', hostname: '**.mgeko4.com' },
+      { protocol: 'https', hostname: '**.imgsrv4.com' },
+      // Supabase Storage
+      { protocol: 'https', hostname: '**.supabase.co' },
       // Comix.to
-      {
-        protocol: 'https',
-        hostname: 'comix.to',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.comix.to',
-      },
-      {
-        protocol: 'https',
-        hostname: 'static.comix.to',
-      },
+      { protocol: 'https', hostname: '**.comix.to' },
+      // Cloudflare Workers
+      { protocol: 'https', hostname: '**.workers.dev' },
     ],
     qualities: [75, 90],
   },

@@ -24,6 +24,8 @@ import {
   Smartphone,
   Monitor,
   Loader2,
+  Expand,
+  Shrink,
 } from 'lucide-react';
 import { addToHistory, isBookmarked, toggleBookmark } from '@/lib/storage';
 import { useReadingHistory } from '@/hooks/useReadingHistory';
@@ -69,6 +71,7 @@ export default function ChapterReaderPage({ params }: PageProps) {
   const [readingMode, setReadingMode] = useState<ReadingMode>('vertical');
   const [colorMode, setColorMode] = useState<ColorMode>('normal');
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Preloading state
   const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set());
@@ -328,6 +331,46 @@ export default function ChapterReaderPage({ params }: PageProps) {
     setColorMode(mode);
     updateSetting('reader_color_mode', mode);
   };
+
+  // Fullscreen toggle for immersive reading
+  const toggleFullscreen = useCallback(async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch (err) {
+      console.log('Fullscreen not supported:', err);
+    }
+  }, []);
+
+  // Listen for fullscreen changes (e.g., user presses Escape)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Auto-fullscreen on mobile when entering reader
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile && !loading && pages.length > 0) {
+      // Small delay to let the page render first
+      const timer = setTimeout(() => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {
+            // Silently fail if fullscreen not supported
+          });
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, pages.length]);
 
   // Swipe gesture handlers for mobile
   const handleSwipeEnd = (
@@ -658,6 +701,28 @@ export default function ChapterReaderPage({ params }: PageProps) {
                   <span className="text-xs font-bold">Dark</span>
                 </button>
               </div>
+            </div>
+
+            {/* Fullscreen Mode */}
+            <div>
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+                Fullscreen
+              </h3>
+              <button
+                onClick={toggleFullscreen}
+                className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${
+                  isFullscreen 
+                    ? 'bg-green-600/20 border-green-500/50 text-green-400' 
+                    : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  {isFullscreen ? <Shrink className="w-5 h-5" /> : <Expand className="w-5 h-5" />}
+                  <span className="text-sm font-bold">
+                    {isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+                  </span>
+                </div>
+              </button>
             </div>
 
             {/* Preload indicator */}
