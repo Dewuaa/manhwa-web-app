@@ -113,7 +113,7 @@ export default function RootLayout({
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes"
         />
-        <meta name="theme-color" content="#9333ea" />
+        <meta name="theme-color" content="#0a0a0a" />
         <link rel="icon" href="/icon-192.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/icon-192.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />

@@ -146,38 +146,38 @@ export const LatestUpdates: React.FC<LatestUpdatesProps> = ({ initialData = [] }
             </button>
           </div>
 
-          {/* Pagination Arrows - Smaller on mobile */}
-          <div className="flex items-center gap-0.5 sm:gap-1">
+          {/* Pagination Arrows - Larger on mobile for easier tapping */}
+          <div className="flex items-center gap-1 sm:gap-1.5">
             <button
               onClick={handlePrevPage}
               disabled={page <= 1}
-              className={`p-1 sm:p-1.5 rounded-md sm:rounded-lg border transition-all ${
+              className={`p-2 sm:p-2 rounded-lg border transition-all ${
                 page <= 1
                   ? 'border-white/5 text-gray-600 cursor-not-allowed'
-                  : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                  : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5 active:scale-95'
               }`}
             >
-              <ChevronLeft size={14} className="sm:w-4 sm:h-4" />
+              <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
             </button>
             <button
               onClick={handleNextPage}
               disabled={!hasNextPage}
-              className={`p-1 sm:p-1.5 rounded-md sm:rounded-lg border transition-all ${
+              className={`p-2 sm:p-2 rounded-lg border transition-all ${
                 !hasNextPage
                   ? 'border-white/5 text-gray-600 cursor-not-allowed'
-                  : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                  : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5 active:scale-95'
               }`}
             >
-              <ChevronRight size={14} className="sm:w-4 sm:h-4" />
+              <ChevronRight size={18} className="sm:w-5 sm:h-5" />
             </button>
             
             {/* Type Filter Dropdown */}
             <div className="relative" ref={menuRef}>
               <button 
                 onClick={() => setShowTypeMenu(!showTypeMenu)}
-                className="p-1 sm:p-1.5 rounded-md sm:rounded-lg border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+                className="p-2 sm:p-2 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-all active:scale-95"
               >
-                <MoreVertical size={14} className="sm:w-4 sm:h-4" />
+                <MoreVertical size={18} className="sm:w-5 sm:h-5" />
               </button>
               
               {/* Dropdown Menu */}
@@ -250,6 +250,37 @@ export const LatestUpdates: React.FC<LatestUpdatesProps> = ({ initialData = [] }
               </div>
             </ManhwaLink>
           ))}
+        </div>
+      )}
+
+      {/* Bottom Pagination - Easy access without scrolling */}
+      {!loading && displayList.length > 0 && (
+        <div className="flex justify-center items-center gap-3 mt-6 pt-4 border-t border-white/5">
+          <button
+            onClick={handlePrevPage}
+            disabled={page <= 1}
+            className={`flex-1 max-w-[160px] flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${
+              page <= 1
+                ? 'border-white/5 text-gray-600 cursor-not-allowed bg-white/5'
+                : 'border-white/10 text-gray-300 hover:text-white hover:bg-white/10 active:scale-95'
+            }`}
+          >
+            <ChevronLeft size={20} />
+            <span className="text-sm font-medium">Previous</span>
+          </button>
+          <span className="text-gray-500 text-sm font-medium px-3">Page {page}</span>
+          <button
+            onClick={handleNextPage}
+            disabled={!hasNextPage}
+            className={`flex-1 max-w-[160px] flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${
+              !hasNextPage
+                ? 'border-white/5 text-gray-600 cursor-not-allowed bg-white/5'
+                : 'border-white/10 text-gray-300 hover:text-white hover:bg-white/10 active:scale-95'
+            }`}
+          >
+            <span className="text-sm font-medium">Next</span>
+            <ChevronRight size={20} />
+          </button>
         </div>
       )}
     </section>
