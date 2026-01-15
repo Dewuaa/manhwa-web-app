@@ -444,3 +444,33 @@ export class ManhwaAPI {
 }
 
 export const manhwaAPI = new ManhwaAPI();
+
+// Helper function for Latest Updates with Hot/New toggle
+export interface LatestUpdatesResponse {
+  currentPage: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  scope: 'hot' | 'new';
+  results: import('./types').Manhwa[];
+}
+
+export type TypeFilter = 'all' | 'manga' | 'manhwa' | 'manhua' | 'other';
+
+export async function getLatestUpdates(
+  page: number = 1, 
+  scope: 'hot' | 'new' = 'hot',
+  typeFilter: TypeFilter = 'all'
+): Promise<LatestUpdatesResponse> {
+  let url = `${API_BASE_URL}/manhwa/comixto/latest?page=${page}&scope=${scope}`;
+  if (typeFilter && typeFilter !== 'all') {
+    url += `&type=${typeFilter}`;
+  }
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch latest updates: ${response.statusText}`);
+  }
+  
+  return response.json();
+}

@@ -225,8 +225,8 @@ export default function BookmarksPage() {
                   }}
                   className="flex gap-4 p-4 bg-gray-900/40 border border-white/5 rounded-2xl cursor-pointer hover:bg-gray-800/60 hover:border-white/10 transition-all group relative"
                 >
-                  {/* Action Buttons */}
-                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  {/* Action Buttons - Always visible on mobile, hover on desktop */}
+                  <div className="absolute top-2 right-2 flex gap-1 transition-opacity z-10 md:opacity-0 md:group-hover:opacity-100">
                     <button
                       onClick={(e) => handleAddToList(bookmark, e)}
                       className={`p-1.5 rounded-full transition-colors ${

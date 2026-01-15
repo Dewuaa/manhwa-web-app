@@ -27,7 +27,7 @@ export interface Manhwa {
   provider?: string; // Source provider
   isPopular?: boolean;
   isTrending?: boolean;
-  updatedAt?: string;
+  updatedAt?: string | number;
 }
 
 export interface SearchResult {

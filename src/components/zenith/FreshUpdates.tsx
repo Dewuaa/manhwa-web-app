@@ -5,6 +5,35 @@ import { Manhwa } from '@/lib/types';
 import { SectionHeader } from './SectionHeader';
 import ImageWithFallback from '../ImageWithFallback';
 
+// Helper to format relative time like "2 hours ago", "37 minutes ago"
+function getRelativeTime(timestamp: number | string | undefined): string {
+  if (!timestamp) return 'Recently';
+  
+  const date = typeof timestamp === 'number' 
+    ? new Date(timestamp * 1000) // Unix timestamp (seconds)
+    : new Date(timestamp);
+  
+  if (isNaN(date.getTime())) return 'Recently';
+  
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  
+  // Handle future dates (possibly wrong timezone), show as "Just now"
+  if (diffMs < 0) return 'Just now';
+  
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours} hr ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 interface FreshUpdatesProps {
   manhwaList: Manhwa[];
   loading?: boolean;
@@ -59,7 +88,7 @@ export const FreshUpdates: React.FC<FreshUpdatesProps> = ({ manhwaList, loading 
                   {manga.title}
                 </h4>
                 <span className="text-[9px] sm:text-[10px] text-gray-500 whitespace-nowrap bg-white/5 px-1.5 py-0.5 rounded shrink-0">
-                  {manga.latestChapters?.[0]?.releaseDate || 'Today'}
+                  {getRelativeTime(manga.updatedAt)}
                 </span>
               </div>
               <p className="text-blue-400 text-[11px] sm:text-xs font-medium mt-0.5 sm:mt-1">

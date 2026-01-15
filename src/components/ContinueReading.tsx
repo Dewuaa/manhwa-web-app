@@ -40,13 +40,13 @@ export default function ContinueReading() {
               className="snap-center flex-none w-[260px] sm:w-[280px] md:w-[320px] group/card relative"
             >
               <div className="flex gap-3 sm:gap-4 bg-gray-900/60 backdrop-blur-sm border border-white/5 rounded-xl sm:rounded-2xl p-2.5 sm:p-3 hover:bg-gray-800/60 transition-colors cursor-pointer h-full relative overflow-hidden">
-                {/* Remove button */}
+                {/* Remove button - Always visible on mobile, hover on desktop */}
                 <button
                   onClick={(e) => {
                     e.preventDefault();
                     removeFromHistory(item.manhwaId);
                   }}
-                  className="absolute top-2 right-2 z-20 w-6 h-6 bg-black/40 hover:bg-red-500/80 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-all"
+                  className="absolute top-2 right-2 z-20 w-6 h-6 bg-black/60 hover:bg-red-500/80 backdrop-blur-md rounded-full flex items-center justify-center transition-all md:opacity-0 md:group-hover/card:opacity-100"
                   title="Remove"
                 >
                   <X className="w-3 h-3 text-white" />

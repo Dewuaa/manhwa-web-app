@@ -24,7 +24,7 @@ import { CategoryRow } from '@/components/zenith/CategoryRow';
 import { AtmosphericBackground } from '@/components/zenith/AtmosphericBackground';
 import { SectionHeader } from '@/components/zenith/SectionHeader';
 import ContinueReading from '@/components/ContinueReading';
-import { FreshUpdates } from '@/components/zenith/FreshUpdates';
+import { LatestUpdates } from '@/components/zenith/LatestUpdates';
 import { RecommendationsRow } from '@/components/RecommendationsRow';
 import { NotificationBell } from '@/components/NotificationBell';
 import { RecentDiscussions } from '@/components/RecentDiscussions';
@@ -394,8 +394,6 @@ export default function Home() {
           <RecommendationsRow availableManhwa={trendingManhwa} />
         )}
 
-        {/* Recent Discussions - Only on Popular/Home */}
-        {activeCategory === 'Popular' && <RecentDiscussions />}
 
         {/* Dynamic Content Area */}
         {(() => {
@@ -468,11 +466,11 @@ export default function Home() {
                 layout="scroll"
               />
 
-              {/* Fresh Updates Section - Using latest manhwa updates */}
-              <FreshUpdates
-                manhwaList={freshUpdatesManhwa}
-                loading={loadingStates.freshUpdates}
-              />
+              {/* Latest Updates Section - Self-contained with Hot/New toggle and pagination */}
+              <LatestUpdates />
+
+              {/* Recent Discussions - Show below Latest Updates */}
+              {activeCategory === 'Popular' && <RecentDiscussions />}
             </>
           );
         })()}
