@@ -8,7 +8,7 @@ import {
 import { apiCache, CACHE_TTL } from './cache';
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'https://web-production-1f437.up.railway.app';
+  process.env.NEXT_PUBLIC_API_URL || 'https://determined-meris-inkora-f9b56664.koyeb.app';
 
 /**
  * Get proxied image URL to bypass hotlink protection
