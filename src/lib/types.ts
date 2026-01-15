@@ -57,16 +57,22 @@ export interface ManhwaInfo {
   image: string;
   headerForImage?: { Referer: string };
   genres?: string[];
+  themes?: string[];
   status: string;
+  type?: string; // Manga, Manhwa, Manhua
+  demographics?: string; // Seinen, Shounen, Shoujo, Josei
   views?: number;
   viewsFormatted?: string;
+  follows?: number;
   rating?: number | string | null;
   ratingCount?: number;
   lastUpdate?: string;
   totalChapters?: number;
   authors?: string[];
+  artists?: string[];
   chapters: Chapter[];
   releaseDate?: string;
+  originalLanguage?: string;
   provider?: string; // Source provider for this data
   _fallback?: boolean; // True if fallback provider was used
 }

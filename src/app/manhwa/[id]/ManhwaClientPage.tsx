@@ -83,6 +83,7 @@ export default function ManhwaDetailPage({ initialManhwa }: ManhwaDetailPageProp
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
+  const [isAltTitlesExpanded, setIsAltTitlesExpanded] = useState(false);
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
   // Initialize scan group from sessionStorage (persists while navigating to reader and back)
   const [selectedScanGroup, setSelectedScanGroup] = useState<string>(() => {
@@ -664,6 +665,16 @@ export default function ManhwaDetailPage({ initialManhwa }: ManhwaDetailPageProp
                         {manhwa.authors?.join(', ') || 'Unknown Author'}
                       </span>
                     </p>
+                    {/* Show artists if different from authors */}
+                    {manhwa.artists && manhwa.artists.length > 0 && 
+                      manhwa.artists.join(',') !== manhwa.authors?.join(',') && (
+                      <p className="text-gray-400 text-[11px] sm:text-xs md:text-base font-medium flex items-center gap-1.5 sm:gap-2 truncate">
+                        <span className="text-gray-500 flex-shrink-0">Art:</span>
+                        <span className="truncate">
+                          {manhwa.artists.join(', ')}
+                        </span>
+                      </p>
+                    )}
                     {manhwa.releaseDate && (
                       <p className="text-gray-400 text-[11px] sm:text-xs md:text-base font-medium flex items-center gap-1.5 sm:gap-2">
                         <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-500 flex-shrink-0" />
@@ -692,19 +703,19 @@ export default function ManhwaDetailPage({ initialManhwa }: ManhwaDetailPageProp
                 </div>
                 <div className="text-center border-l border-white/10 group">
                   <div className="text-white font-black text-base sm:text-lg md:text-2xl mb-0.5 sm:mb-1 group-hover:text-blue-400 transition-colors">
-                    {manhwa.viewsFormatted ||
-                      (manhwa.views
-                        ? typeof manhwa.views === 'number'
-                          ? manhwa.views > 1000000
-                            ? `${(manhwa.views / 1000000).toFixed(1)}M`
-                            : manhwa.views > 1000
-                              ? `${(manhwa.views / 1000).toFixed(1)}K`
-                              : manhwa.views
-                          : manhwa.views
-                        : 'N/A')}
+                    {(() => {
+                      const count = manhwa.follows || manhwa.views;
+                      if (!count) return 'N/A';
+                      if (typeof count === 'number') {
+                        if (count > 1000000) return `${(count / 1000000).toFixed(1)}M`;
+                        if (count > 1000) return `${(count / 1000).toFixed(1)}K`;
+                        return count;
+                      }
+                      return count;
+                    })()}
                   </div>
                   <p className="text-[9px] sm:text-[10px] md:text-xs uppercase tracking-wider text-gray-500 font-bold">
-                    Views
+                    {manhwa.follows ? 'Follows' : 'Views'}
                   </p>
                 </div>
                 <div className="text-center border-l border-white/10 group">
@@ -717,7 +728,7 @@ export default function ManhwaDetailPage({ initialManhwa }: ManhwaDetailPageProp
                 </div>
               </div>
 
-              {/* Status & Last Update Row */}
+              {/* Status & Type Row */}
               <div className="mt-3 sm:mt-4 flex flex-wrap gap-2 sm:gap-3">
                 <span
                   className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 ${
@@ -731,6 +742,18 @@ export default function ManhwaDetailPage({ initialManhwa }: ManhwaDetailPageProp
                   <BookOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   {manhwa.status || 'Unknown'}
                 </span>
+                {/* Type Badge */}
+                {manhwa.type && (
+                  <span className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                    {manhwa.type}
+                  </span>
+                )}
+                {/* Demographics Badge */}
+                {manhwa.demographics && (
+                  <span className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+                    {manhwa.demographics}
+                  </span>
+                )}
                 {manhwa.lastUpdate && (
                   <span className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold bg-white/5 text-gray-400 border border-white/10 flex items-center gap-1 sm:gap-1.5">
                     <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -738,6 +761,45 @@ export default function ManhwaDetailPage({ initialManhwa }: ManhwaDetailPageProp
                   </span>
                 )}
               </div>
+
+              {/* Alternative Titles (Collapsible) */}
+              {manhwa.altTitles && manhwa.altTitles.filter(t => !t.startsWith('anilist:')).length > 0 && (
+                <div className="mt-4">
+                  <button
+                    onClick={() => setIsAltTitlesExpanded(!isAltTitlesExpanded)}
+                    className="flex items-center gap-2 text-gray-400 hover:text-white text-sm font-medium transition-colors"
+                  >
+                    <span>Alternative Titles ({manhwa.altTitles.filter(t => !t.startsWith('anilist:')).length})</span>
+                    {isAltTitlesExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                  {isAltTitlesExpanded && (
+                    <div className="mt-2 p-3 bg-white/5 rounded-xl border border-white/10">
+                      {manhwa.altTitles.filter(t => !t.startsWith('anilist:')).map((title, idx) => (
+                        <p key={idx} className="text-gray-300 text-sm leading-relaxed">
+                          • {title}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Themes Section */}
+              {manhwa.themes && manhwa.themes.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Themes</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {manhwa.themes.map((theme) => (
+                      <span
+                        key={theme}
+                        className="text-[10px] md:text-xs font-medium px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg bg-orange-500/10 text-orange-300 border border-orange-500/20"
+                      >
+                        {theme}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* AI Insight Section */}
               <div className="mt-5 md:mt-6">
