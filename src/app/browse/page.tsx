@@ -134,6 +134,7 @@ function BrowsePageContent() {
   const [yearTo, setYearTo] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('follows');
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Read URL query parameter on mount
   useEffect(() => {
@@ -141,7 +142,20 @@ function BrowsePageContent() {
     if (urlQuery) {
       setQuery(urlQuery);
     }
+    // Load saved sort preference
+    const savedSort = localStorage.getItem('browse_sort');
+    if (savedSort && SORT_OPTIONS.find(o => o.value === savedSort)) {
+      setSortBy(savedSort);
+    }
+    setIsLoaded(true);
   }, [searchParams]);
+
+  // Save sort preference when it changes
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('browse_sort', sortBy);
+    }
+  }, [sortBy, isLoaded]);
 
   const debouncedQuery = useDebounce(query, 400);
 

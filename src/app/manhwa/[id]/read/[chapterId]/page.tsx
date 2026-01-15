@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { manhwaAPI } from '@/lib/api';
@@ -87,6 +87,53 @@ export default function ChapterReaderPage({ params }: PageProps) {
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const hasRestoredScroll = useRef(false);
+
+  // Filter chapters to match current chapter's scan group
+  const filteredChaptersForDrawer = useMemo(() => {
+    if (!manhwaInfo?.chapters) return [];
+    
+    const decodedChapterId = decodeURIComponent(chapterId);
+    
+    // Find which scan group the current chapter belongs to
+    let currentScanGroupId: string | null = null;
+    
+    for (const chapter of manhwaInfo.chapters) {
+      // Check if current chapter is the primary
+      if (chapter.id === decodedChapterId && chapter.scanGroup) {
+        currentScanGroupId = String(chapter.scanGroup.id);
+        break;
+      }
+      // Check if current chapter is in versions
+      if (chapter.versions) {
+        const version = chapter.versions.find((v: { id: string }) => v.id === decodedChapterId);
+        if (version?.scanGroup) {
+          currentScanGroupId = String(version.scanGroup.id);
+          break;
+        }
+      }
+    }
+    
+    // If no scan group found or it's the primary chapters, return all
+    if (!currentScanGroupId) return manhwaInfo.chapters;
+    
+    // Filter to only show chapters from the same scan group
+    return manhwaInfo.chapters.map(chapter => {
+      // Check if primary chapter matches
+      if (chapter.scanGroup && String(chapter.scanGroup.id) === currentScanGroupId) {
+        return chapter;
+      }
+      // Check if any version matches
+      if (chapter.versions) {
+        const matchingVersion = chapter.versions.find(
+          (v: { scanGroup?: { id: string | number } }) => v.scanGroup && String(v.scanGroup.id) === currentScanGroupId
+        );
+        if (matchingVersion) {
+          return { ...matchingVersion, title: chapter.title };
+        }
+      }
+      return null;
+    }).filter(Boolean);
+  }, [manhwaInfo?.chapters, chapterId]);
 
   // Load Params
   useEffect(() => {
@@ -259,7 +306,14 @@ export default function ChapterReaderPage({ params }: PageProps) {
       if (!manhwaInfo || !chapterId) return;
 
       const decodedChapterId = decodeURIComponent(chapterId);
-      const currentChapter = manhwaInfo.chapters.find((ch) => ch.id === decodedChapterId);
+      // Find chapter by ID - check both primary and version IDs
+      let currentChapter = manhwaInfo.chapters.find((ch) => ch.id === decodedChapterId);
+      if (!currentChapter) {
+        // Search in versions and use the parent chapter info for title
+        currentChapter = manhwaInfo.chapters.find((ch) => 
+          ch.versions?.some((v: { id: string }) => v.id === decodedChapterId)
+        );
+      }
 
       if (currentChapter && scrollProgress >= 0) {
         const roundedProgress = Math.round(scrollProgress);
@@ -464,11 +518,26 @@ export default function ChapterReaderPage({ params }: PageProps) {
       setManhwaInfo(info);
 
       const decodedChapterId = decodeURIComponent(chapterId);
-      const index = info.chapters.findIndex((ch) => ch.id === decodedChapterId);
+      
+      // Find chapter by ID - check both primary chapter IDs and version IDs
+      let index = info.chapters.findIndex((ch) => ch.id === decodedChapterId);
+      
+      // If not found in primary chapters, search in versions
+      if (index === -1) {
+        index = info.chapters.findIndex((ch) => 
+          ch.versions?.some((v: { id: string }) => v.id === decodedChapterId)
+        );
+      }
+      
       setCurrentChapterIndex(index);
 
-      // Add to history
-      const currentChapter = info.chapters.find((ch) => ch.id === decodedChapterId);
+      // Add to history - find chapter by ID (check both primary and version IDs)
+      let currentChapter = info.chapters.find((ch) => ch.id === decodedChapterId);
+      if (!currentChapter) {
+        currentChapter = info.chapters.find((ch) => 
+          ch.versions?.some((v: { id: string }) => v.id === decodedChapterId)
+        );
+      }
       if (currentChapter) {
         addToHistory({
           manhwaId: decodeURIComponent(manhwaId),
@@ -981,13 +1050,13 @@ export default function ChapterReaderPage({ params }: PageProps) {
               </div>
 
               <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
-                {manhwaInfo?.chapters
+                {filteredChaptersForDrawer
                   .filter(
-                    (ch) =>
+                    (ch: { title?: string; id: string }) =>
                       ch.title?.toLowerCase().includes(chapterSearch.toLowerCase()) ||
                       ch.id.includes(chapterSearch),
                   )
-                  .map((chapter) => (
+                  .map((chapter: { id: string; title?: string }) => (
                     <Link
                       key={chapter.id}
                       href={`/manhwa/${encodeURIComponent(manhwaId)}/read/${encodeURIComponent(chapter.id)}`}

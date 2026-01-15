@@ -528,10 +528,11 @@ export default function ManhwaDetailPage({ initialManhwa }: ManhwaDetailPageProp
               </div>
               <Link
                 href={
-                  manhwa.chapters.length > 0
-                    ? `/manhwa/${encodeURIComponent(id)}/read/${encodeURIComponent(String(manhwa.chapters[manhwa.chapters.length - 1].id))}`
+                  filteredChapters.length > 0
+                    ? `/manhwa/${encodeURIComponent(id)}/read/${encodeURIComponent(String(filteredChapters[filteredChapters.length - 1].id))}`
                     : '#'
                 }
+                suppressHydrationWarning
                 className="w-full mt-6 bg-white text-black h-14 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:scale-105 active:scale-95 transition-all"
               >
                 <Play size={20} fill="currentColor" /> Read First
@@ -898,10 +899,11 @@ export default function ManhwaDetailPage({ initialManhwa }: ManhwaDetailPageProp
               <div className="md:hidden sticky bottom-8 z-40 mt-8 flex gap-3">
                 <Link
                   href={
-                    manhwa.chapters.length > 0
-                      ? `/manhwa/${encodeURIComponent(id)}/read/${encodeURIComponent(String(manhwa.chapters[manhwa.chapters.length - 1].id))}`
+                    filteredChapters.length > 0
+                      ? `/manhwa/${encodeURIComponent(id)}/read/${encodeURIComponent(String(filteredChapters[filteredChapters.length - 1].id))}`
                       : '#'
                   }
+                  suppressHydrationWarning
                   className="flex-1 bg-white text-black h-14 rounded-full font-bold text-lg flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-transform active:scale-95 group"
                 >
                   <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center group-hover:scale-110 transition-transform">
