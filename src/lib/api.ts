@@ -10,24 +10,28 @@ import { apiCache, CACHE_TTL } from './cache';
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'https://determined-meris-inkora-f9b56664.koyeb.app';
 
+// Cloudflare Worker for image proxying (trusted IPs, no blocking)
+const CLOUDFLARE_IMAGE_PROXY = 'https://image-proxy.gabrielorbeta11.workers.dev';
+
 /**
  * Get proxied image URL to bypass hotlink protection
+ * Uses Cloudflare Worker for reliable image proxying
  * @param imageUrl - Original image URL
  * @param referer - Optional referer URL (auto-detected from image URL if not provided)
  */
 export function getProxiedImageUrl(imageUrl: string, referer?: string): string {
   if (!imageUrl) return '';
 
-  // If already proxied, return as-is
-  if (imageUrl.includes('/proxy/image')) return imageUrl;
+  // If already proxied via Cloudflare or Koyeb, return as-is
+  if (imageUrl.includes('/proxy/image') || imageUrl.includes('.workers.dev')) return imageUrl;
 
-  // Build proxy URL
+  // Build proxy URL using Cloudflare Worker
   const params = new URLSearchParams({ url: imageUrl });
   if (referer) {
     params.append('referer', referer);
   }
 
-  return `${API_BASE_URL}/proxy/image?${params.toString()}`;
+  return `${CLOUDFLARE_IMAGE_PROXY}?${params.toString()}`;
 }
 
 export interface AdvancedSearchOptions {
