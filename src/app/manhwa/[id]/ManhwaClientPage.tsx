@@ -598,7 +598,7 @@ export default function ManhwaDetailPage({ initialManhwa }: ManhwaDetailPageProp
 
             {/* Info Card */}
             <div className="px-4 sm:px-6 -mt-28 sm:-mt-32 md:mt-0 md:px-0">
-              <div className="flex gap-3.5 sm:gap-5 items-end md:items-start">
+              <div className="flex gap-3.5 sm:gap-5 items-start">
                 {/* Mobile Thumbnail */}
                 <div className="md:hidden relative group shrink-0">
                   <div className="absolute inset-0 bg-white/20 blur-xl rounded-lg group-hover:bg-blue-500/30 transition-colors" />
@@ -638,51 +638,64 @@ export default function ManhwaDetailPage({ initialManhwa }: ManhwaDetailPageProp
                       </span>
                     )}
                   </div>
-                  {/* Title - expandable on mobile */}
-                  <div className="relative">
-                    <h2
-                      onClick={() => setIsTitleExpanded(!isTitleExpanded)}
-                      className={`text-xl sm:text-2xl md:text-5xl font-black text-white leading-tight drop-shadow-xl mb-1.5 sm:mb-2 md:mb-4 cursor-pointer md:cursor-default ${
-                        isTitleExpanded ? '' : 'line-clamp-2 md:line-clamp-none'
-                      }`}
-                    >
-                      {manhwa.title}
-                    </h2>
-                    {/* Show tap hint only on mobile if title is long */}
-                    {manhwa.title.length > 40 && (
-                      <button
-                        onClick={() => setIsTitleExpanded(!isTitleExpanded)}
-                        className="md:hidden text-blue-400 text-xs font-medium -mt-1 mb-2"
-                      >
-                        {isTitleExpanded ? 'Show less' : 'Tap to see full title'}
-                      </button>
-                    )}
-                  </div>
-                  <div className="space-y-1 sm:space-y-1.5">
-                    <p className="text-gray-300 text-xs sm:text-sm md:text-lg font-medium flex items-center gap-1.5 sm:gap-2 truncate">
-                      <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0" />
-                      <span className="truncate">
+                  {/* Title */}
+                  <h2 className="text-xl sm:text-2xl md:text-5xl font-black text-white leading-tight drop-shadow-xl mb-1.5 sm:mb-2 md:mb-4">
+                    {manhwa.title}
+                  </h2>
+                  {/* Desktop: Author/Artist inline */}
+                  <div className="hidden md:block space-y-2">
+                    {/* Author */}
+                    <div className="text-gray-300 text-lg font-medium flex items-start gap-2">
+                      <User className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                      <span className="line-clamp-2">
                         {manhwa.authors?.join(', ') || 'Unknown Author'}
                       </span>
-                    </p>
+                    </div>
                     {/* Show artists if different from authors */}
                     {manhwa.artists && manhwa.artists.length > 0 && 
                       manhwa.artists.join(',') !== manhwa.authors?.join(',') && (
-                      <p className="text-gray-400 text-[11px] sm:text-xs md:text-base font-medium flex items-center gap-1.5 sm:gap-2 truncate">
+                      <div className="text-gray-400 text-base font-medium flex items-start gap-2">
                         <span className="text-gray-500 flex-shrink-0">Art:</span>
-                        <span className="truncate">
+                        <span className="line-clamp-2">
                           {manhwa.artists.join(', ')}
                         </span>
-                      </p>
+                      </div>
                     )}
                     {manhwa.releaseDate && (
-                      <p className="text-gray-400 text-[11px] sm:text-xs md:text-base font-medium flex items-center gap-1.5 sm:gap-2">
-                        <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-500 flex-shrink-0" />
+                      <p className="text-gray-400 text-base font-medium flex items-center gap-2">
+                        <Calendar className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                         <span>Released {manhwa.releaseDate}</span>
                       </p>
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* Mobile: Author/Artist below thumbnail (full width) */}
+              <div className="md:hidden mt-3 space-y-2">
+                {/* Author */}
+                <div className="text-gray-300 text-sm font-medium flex items-start gap-2">
+                  <User className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                  <span>
+                    {manhwa.authors?.join(', ') || 'Unknown Author'}
+                  </span>
+                </div>
+                {/* Show artists if different from authors */}
+                {manhwa.artists && manhwa.artists.length > 0 && 
+                  manhwa.artists.join(',') !== manhwa.authors?.join(',') && (
+                  <div className="text-gray-400 text-xs font-medium flex items-start gap-2">
+                    <span className="text-gray-500 flex-shrink-0">Art:</span>
+                    <span>
+                      {manhwa.artists.join(', ')}
+                    </span>
+                  </div>
+                )}
+                {manhwa.releaseDate && (
+                  <p className="text-gray-400 text-xs font-medium flex items-center gap-2">
+                    <Calendar className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                    <span>Released {manhwa.releaseDate}</span>
+                  </p>
+                )}
               </div>
 
               {/* Stats Row */}
